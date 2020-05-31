@@ -1,5 +1,11 @@
 # opinionated-commit-message
-Opinionated-commit-message is a Github Action which checks commit messages according to an opinioned style.
+
+![build-and-test](
+https://github.com/mristin/opinionated-commit-message/workflows/build-and-test/badge.svg?branch=master
+)
+
+Opinionated-commit-message is a Github Action which checks commit messages 
+according to an opinionated style.
 
 The style was inspired by https://chris.beams.io/posts/git-commit/:
 
@@ -14,15 +20,18 @@ The style was inspired by https://chris.beams.io/posts/git-commit/:
 ## Prior Art
 
 There exist a good action to check commit messages, commit-message-checker 
-(https://github.com/GsActions/commit-message-checker). However, it is limited to regular expressions which makes more 
-complex checks (such as imperative mood) hard or impossible to implement.
+(https://github.com/GsActions/commit-message-checker). However, it is limited 
+to regular expressions which makes more complex checks (such as imperative mood) 
+hard or impossible to implement.
 
-I based my implementation heavily on commit-message-checker and would like to thank the author for the great work!
+I based my implementation heavily on commit-message-checker and would like to 
+thank the author for the great work!
 
 ## Example Workflow
 
-You can set up a Github workflow to automatically check messages. Put the following file in 
-`.github/workflows/check-commit-message.yml` and the Github should pick it and set it up.
+You can set up a Github workflow to automatically check messages. 
+Put the following file in `.github/workflows/check-commit-message.yml` and 
+Github should pick it and set it up.
 
 ```yml
 name: 'Check commit message style'
@@ -50,9 +59,9 @@ jobs:
 ## Contributing
 
 If you would like to report bugs or request a feature, please create 
-a (new issue)[https://github.com/mristin/opinionated-commit-message/issues/new].
+a [new issue](https://github.com/mristin/opinionated-commit-message/issues/new).
 
-Please see (CONTRIBUTING.md)[https://github.com/mristin/opinionated-commit-message/blob/master/CONTRIBUTING.md] if you
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) if you
 would like to contribute to the code.
 
 ## License
