@@ -1,0 +1,9 @@
+name: 'Opinionated-commit-message'
+description: 'Check commit messages according to an opinionated style'
+author: 'Marko Ristin'
+runs:
+  using: node12
+  main: dist/index.js
+branding:
+  icon: 'check'
+  color: 'blue'
