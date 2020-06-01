@@ -3,7 +3,6 @@
 ![version](
 https://img.shields.io/github/v/release/mristin/opinionated-commit-message?style=flat-square
 )
-
 ![build-and-test](
 https://github.com/mristin/opinionated-commit-message/workflows/build-and-test/badge.svg?branch=master
 )
