@@ -20,6 +20,16 @@ The style was inspired by https://chris.beams.io/posts/git-commit/:
 * Wrap the body at 72 characters
 * Use the body to explain what and why (instead of how)
 
+Here is an example commit message:
+
+```
+Set up Open ID HttpClient with default proxy
+
+Previously, the Open ID HttpClient was simply instantiated without 
+default proxy credentials. However, if there are company proxies,
+HttpClient must use the default proxy with OpenID Connect.
+```
+
 ## Prior Art
 
 There exist a good action to check commit messages, commit-message-checker 
