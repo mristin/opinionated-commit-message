@@ -651,5 +651,9 @@ export const SET = new Set([
   'work',
   'workout',
   'worry',
-  'write'
+  'write',
+
+  // Programming-specific verbs
+  'rewrite',
+  'refactor'
 ]);
