@@ -408,6 +408,7 @@ export const SET = new Set([
   'operate',
   'order',
   'organise',
+  'organize',
   'owe',
   'own',
   'paint',
@@ -655,5 +656,8 @@ export const SET = new Set([
 
   // Programming-specific verbs
   'rewrite',
-  'refactor'
+  'refactor',
+  'reorganise',
+  'reorganize',
+  'restructure'
 ]);
