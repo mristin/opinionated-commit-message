@@ -8324,6 +8324,7 @@ exports.SET = new Set([
     'operate',
     'order',
     'organise',
+    'organize',
     'owe',
     'own',
     'paint',
@@ -8570,7 +8571,10 @@ exports.SET = new Set([
     'write',
     // Programming-specific verbs
     'rewrite',
-    'refactor'
+    'refactor',
+    'reorganise',
+    'reorganize',
+    'restructure'
 ]);
 
 
