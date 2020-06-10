@@ -659,5 +659,8 @@ export const SET = new Set([
   'refactor',
   'reorganise',
   'reorganize',
-  'restructure'
+  'restructure',
+  'unify',
+  'reword',
+  'rephrase'
 ]);
