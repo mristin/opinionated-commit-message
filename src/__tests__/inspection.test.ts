@@ -11,6 +11,17 @@ it('reports no errors on correct message.', () => {
   expect(errors).toEqual([]);
 });
 
+it('tolerates hash code in the subject.', () => {
+  const message =
+    'Unify all license files to LICENSE.txt naming (#43)\n' +
+    '\n' +
+    'The license files naming was inconsistent (`LICENSE.TXT` and \n' +
+    '`LICENSE.txt`). This makes them all uniform (`LICENSE.txt`).';
+
+  const errors = inspection.check(message);
+  expect(errors).toEqual([]);
+});
+
 it('reports too few lines.', () => {
   const message = 'Change SomeClass to OtherClass';
   const errors = inspection.check(message);
