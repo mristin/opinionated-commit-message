@@ -567,16 +567,25 @@ function splitSubjectBody(message) {
     return result;
 }
 const capitalizedWordRe = new RegExp('^([A-Z][a-z]*)[^a-zA-Z]');
+const suffixHashCodeRe = new RegExp('\\s?\\(\\s*#[a-zA-Z_0-9]+\\s*\\)$');
 function checkSubject(subject) {
     const errors = [];
-    if (subject.length > 50) {
+    // Tolerate the hash code referring, e.g., to a pull request.
+    // These hash codes are usually added automatically by Github and
+    // similar services.
+    const subjectWoCode = subject.replace(suffixHashCodeRe, '');
+    if (subjectWoCode.length > 50) {
         errors.push(`The subject exceeds the limit of 50 characters, got: ${subject.length}`);
     }
-    const match = capitalizedWordRe.exec(subject);
+    const match = capitalizedWordRe.exec(subjectWoCode);
     if (!match) {
         errors.push('The subject must start with a capitalized verb (e.g., "Change").');
     }
     else {
+        if (match.length < 2) {
+            throw Error('Expected at least one group to match the first capitalized word, ' +
+                'but got none.');
+        }
         const word = match[1];
         if (!mostFrequentEnglishVerbs.SET.has(word.toLowerCase())) {
             errors.push('The subject must start in imperative mood with one of the ' +
@@ -586,7 +595,7 @@ function checkSubject(subject) {
                 'for a complete list.');
         }
     }
-    if (subject.endsWith('.')) {
+    if (subjectWoCode.endsWith('.')) {
         errors.push("The subject must not end with a dot ('.').");
     }
     return errors;
@@ -8574,7 +8583,10 @@ exports.SET = new Set([
     'refactor',
     'reorganise',
     'reorganize',
-    'restructure'
+    'restructure',
+    'unify',
+    'reword',
+    'rephrase'
 ]);
 
 
