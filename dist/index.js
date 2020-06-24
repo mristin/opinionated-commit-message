@@ -8587,7 +8587,9 @@ exports.SET = new Set([
     'unify',
     'reword',
     'rephrase',
-    'upgrade'
+    'upgrade',
+    'reformat',
+    'update'
 ]);
 
 
