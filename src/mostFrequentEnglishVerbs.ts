@@ -663,5 +663,7 @@ export const SET = new Set([
   'unify',
   'reword',
   'rephrase',
-  'upgrade'
+  'upgrade',
+  'reformat',
+  'update'
 ]);
