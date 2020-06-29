@@ -8578,7 +8578,7 @@ exports.SET = new Set([
     'workout',
     'worry',
     'write',
-    // Programming-specific verbs
+    // Verbs specific to programming
     'rewrite',
     'refactor',
     'reorganise',
@@ -8589,7 +8589,8 @@ exports.SET = new Set([
     'rephrase',
     'upgrade',
     'reformat',
-    'update'
+    'update',
+    'rename'
 ]);
 
 
