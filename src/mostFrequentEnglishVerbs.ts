@@ -654,7 +654,7 @@ export const SET = new Set([
   'worry',
   'write',
 
-  // Programming-specific verbs
+  // Verbs specific to programming
   'rewrite',
   'refactor',
   'reorganise',
@@ -665,5 +665,6 @@ export const SET = new Set([
   'rephrase',
   'upgrade',
   'reformat',
-  'update'
+  'update',
+  'rename'
 ]);
