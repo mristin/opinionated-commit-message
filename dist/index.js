@@ -8590,7 +8590,8 @@ exports.SET = new Set([
     'upgrade',
     'reformat',
     'update',
-    'rename'
+    'rename',
+    'revert'
 ]);
 
 
