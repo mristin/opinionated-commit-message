@@ -8591,7 +8591,9 @@ exports.SET = new Set([
     'reformat',
     'update',
     'rename',
-    'revert'
+    'revert',
+    'correct',
+    'invalidate'
 ]);
 
 
