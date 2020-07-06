@@ -668,5 +668,6 @@ export const SET = new Set([
   'update',
   'rename',
   'revert',
-  'correct'
+  'correct',
+  'invalidate'
 ]);
