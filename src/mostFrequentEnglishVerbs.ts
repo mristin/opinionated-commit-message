@@ -669,5 +669,13 @@ export const SET = new Set([
   'rename',
   'revert',
   'correct',
-  'invalidate'
+  'invalidate',
+  'whitelist',
+  'blacklist',
+  'merge',
+  'disable',
+  'document',
+  'simplify',
+  'extract',
+  'downgrade'
 ]);
