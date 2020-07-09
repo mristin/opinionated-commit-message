@@ -3990,6 +3990,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.retrieve = void 0;
+const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
 // This code has been taken from https://github.com/GsActions/commit-message-checker/blob/master/src/input-helper.ts
 // and slightly modified.
@@ -4004,6 +4005,8 @@ function retrieve() {
     const result = [];
     switch (github.context.eventName) {
         case 'pull_request': {
+            // TODO: remove debug
+            core.info(`The payload was: ${JSON.stringify(github.context.payload)}`);
             const pull_request = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
             if (pull_request) {
                 let msg = pull_request.title;
@@ -4476,7 +4479,7 @@ function run() {
                 parts.push(repr);
             }
             else {
-                core.info(`The message is OK:\n---${message}\n---`);
+                core.info(`The message is OK:\n---\n${message}\n---`);
             }
         }
         const errorMessage = parts.join('\n');

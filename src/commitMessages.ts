@@ -15,6 +15,9 @@ export function retrieve(): string[] {
 
   switch (github.context.eventName) {
     case 'pull_request': {
+      // TODO: remove debug
+      core.info(`The payload was: ${JSON.stringify(github.context.payload)}`);
+
       const pull_request = github.context.payload?.pull_request;
 
       if (pull_request) {
