@@ -8,6 +8,21 @@ jest.mock('../commitMessages');
 
 /* eslint eqeqeq: "off", curly: "error" */
 
+it('considers additional verbs.', () => {
+  (commitMessages.retrieve as any).mockImplementation(() => [
+    'Table SomeClass\n\nThis is a dummy commit.'
+  ]);
+
+  const mockSetFailed = jest.fn();
+  (core as any).setFailed = mockSetFailed;
+
+  (core as any).getInput = () => 'rewrap,table';
+
+  mainImpl.run();
+
+  expect(mockSetFailed.mock.calls).toEqual([]);
+});
+
 it('formats properly no error message.', () => {
   (commitMessages.retrieve as any).mockImplementation(() => [
     'Change SomeClass to OtherClass\n' +
