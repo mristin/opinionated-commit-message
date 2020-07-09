@@ -4467,6 +4467,9 @@ function run() {
                 const repr = represent.formatErrors(message, messageIndex, errors);
                 parts.push(repr);
             }
+            else {
+                core.info(`The message is OK:\n---\n${message}\n---`);
+            }
         }
         const errorMessage = parts.join('\n');
         if (errorMessage.length > 0) {
