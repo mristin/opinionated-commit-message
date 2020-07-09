@@ -131,8 +131,17 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
   return errors;
 }
 
+const mergeMessageRe = new RegExp(
+  "^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
+    'into [^\\000-\\037\\177 ~^:?*[]+$'
+);
+
 export function check(message: string): string[] {
   const errors: string[] = [];
+
+  if (mergeMessageRe.test(message)) {
+    return errors;
+  }
 
   const maybeSubjectBody = splitSubjectBody(message);
   if (maybeSubjectBody.errors.length > 0) {
