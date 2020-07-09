@@ -24,6 +24,8 @@ export function run(): void {
         );
 
         parts.push(repr);
+      } else {
+        core.info(`The message is OK:\n---\n${message}\n---`);
       }
     }
 
