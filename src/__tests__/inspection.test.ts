@@ -133,3 +133,10 @@ it('reports duplicate starting word in subject and body.', () => {
     'The first word of the subject must not match the first word of the body.'
   ]);
 });
+
+it('ignores merge messages.', () => {
+  const message = "Merge branch 'V20DataModel' into miho/Conform-to-spec";
+
+  const errors = inspection.check(message);
+  expect(errors).toEqual([]);
+});

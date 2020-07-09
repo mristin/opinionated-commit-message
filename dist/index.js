@@ -633,8 +633,13 @@ function checkBody(subject, bodyLines) {
     }
     return errors;
 }
+const mergeMessageRe = new RegExp("^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
+    'into [^\\000-\\037\\177 ~^:?*[]+$');
 function check(message) {
     const errors = [];
+    if (mergeMessageRe.test(message)) {
+        return errors;
+    }
     const maybeSubjectBody = splitSubjectBody(message);
     if (maybeSubjectBody.errors.length > 0) {
         errors.push(...maybeSubjectBody.errors);
