@@ -8603,7 +8603,8 @@ exports.SET = new Set([
     'document',
     'simplify',
     'extract',
-    'downgrade'
+    'downgrade',
+    'clarify'
 ]);
 
 
