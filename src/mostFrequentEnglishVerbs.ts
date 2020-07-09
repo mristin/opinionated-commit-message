@@ -679,5 +679,8 @@ export const SET = new Set([
   'extract',
   'downgrade',
   'clarify',
-  'relax'
+  'relax',
+  'wrap',
+  'unwrap',
+  'rewrap'
 ]);
