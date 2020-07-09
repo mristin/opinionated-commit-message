@@ -69,6 +69,33 @@ jobs:
         uses: mristin/opinionated-commit-message@v1.0.0
 ```
 
+## Checked Events
+
+Opinionated-commit-message verifies commit messages on the Github events
+[`pull_request`](
+https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request
+) and [`push`](
+https://docs.github.com/en/actions/reference/events-that-trigger-workflows#push
+).
+
+In the case of pull requests only the title and the body of the pull request
+are checked. 
+
+On push, all the commit messages *of the push* are verified.
+
+## Known Issue
+
+Commit messages of the pull request are not verified unless you trigger the 
+workflow on the push as well. Github does not include the content of commit 
+messages in the context payload, so checking all the commit messages of 
+the pull request would involve various API call and additional complexity.
+
+To overcome this issue, run opinionanted-commit-message both on `pull_request`
+and `push`. Please upvote [this issue](
+https://github.com/mristin/opinionated-commit-message/issues/28
+) to signal the visibility and so that we could judge when this feature merits 
+the effort.
+
 ## Contributing
 
 If you would like to report bugs or request a feature, please create 
