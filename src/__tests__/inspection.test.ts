@@ -92,7 +92,7 @@ it('reports too long a body line.', () => {
     'The line 3 of the message (line 1 of the body) exceeds the limit of ' +
       '72 characters. The line contains 97 characters: ' +
       '"This replaces the SomeClass with OtherClass in all of the module since ' +
-      'Some class was deprecated."'
+      'Some class was deprecated.".'
   ]);
 });
 
@@ -115,11 +115,11 @@ it('accepts a body line of exactly 72 characters', () => {
   expect(errors).toEqual([]);
 });
 
-it('reports body that does not start with a word.', () => {
+it('accepts body that does not start with a word.', () => {
   const message = 'Change SomeClass to OtherClass\n\n* Do something';
 
   const errors = inspection.check(message);
-  expect(errors).toEqual(['The body must start with a capitalized word.']);
+  expect(errors).toEqual([]);
 });
 
 it('reports duplicate starting word in subject and body.', () => {
@@ -130,7 +130,8 @@ it('reports duplicate starting word in subject and body.', () => {
 
   const errors = inspection.check(message);
   expect(errors).toEqual([
-    'The first word of the subject must not match the first word of the body.'
+    'The first word of the subject ("Change") must not match ' +
+      'the first word of the body.'
   ]);
 });
 

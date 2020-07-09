@@ -100,16 +100,15 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
       errors.push(
         `The line ${i + 3} of the message (line ${i + 1} of the body) ` +
           'exceeds the limit of 72 characters. ' +
-          `The line contains ${line.length} characters: ${JSON.stringify(line)}`
+          `The line contains ${line.length} characters: ` +
+          `${JSON.stringify(line)}.`
       );
     }
   }
 
   const bodyFirstWordMatch = capitalizedWordRe.exec(bodyLines[0]);
 
-  if (!bodyFirstWordMatch) {
-    errors.push('The body must start with a capitalized word.');
-  } else {
+  if (bodyFirstWordMatch) {
     const bodyFirstWord = bodyFirstWordMatch[1];
 
     const subjectFirstWordMatch = capitalizedWordRe.exec(subject);
@@ -121,7 +120,9 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
       const subjectFirstWord = subjectFirstWordMatch[1];
       if (subjectFirstWord.toLowerCase() === bodyFirstWord.toLowerCase()) {
         errors.push(
-          'The first word of the subject must not match ' +
+          'The first word of the subject ' +
+            `(${JSON.stringify(subjectFirstWord)}) ` +
+            'must not match ' +
             'the first word of the body.'
         );
       }

@@ -678,5 +678,6 @@ export const SET = new Set([
   'simplify',
   'extract',
   'downgrade',
-  'clarify'
+  'clarify',
+  'relax'
 ]);
