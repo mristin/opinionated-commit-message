@@ -4000,15 +4000,15 @@ const github = __importStar(__webpack_require__(469));
  * @returns   string[]
  */
 function retrieve() {
+    var _a, _b;
     const result = [];
     switch (github.context.eventName) {
         case 'pull_request': {
-            if (github.context.payload &&
-                github.context.payload.pull_request &&
-                github.context.payload.pull_request.title) {
-                let msg = github.context.payload.pull_request.title;
-                if (github.context.payload.pull_request.body) {
-                    msg = msg.concat('\n\n', github.context.payload.pull_request.body);
+            const pull_request = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
+            if (pull_request) {
+                let msg = pull_request.title;
+                if (pull_request.body) {
+                    msg = msg.concat('\n\n', pull_request.body);
                 }
                 result.push(msg);
             }
@@ -4018,12 +4018,11 @@ function retrieve() {
             break;
         }
         case 'push': {
-            if (github.context.payload &&
-                github.context.payload.commits &&
-                github.context.payload.commits.length) {
-                for (const i in github.context.payload.commits) {
-                    if (github.context.payload.commits[i].message) {
-                        result.push(github.context.payload.commits[i].message);
+            const commits = (_b = github.context.payload) === null || _b === void 0 ? void 0 : _b.commits;
+            if (commits) {
+                for (const commit of commits) {
+                    if (commit.message) {
+                        result.push(commit.message);
                     }
                 }
             }
@@ -8593,7 +8592,15 @@ exports.SET = new Set([
     'rename',
     'revert',
     'correct',
-    'invalidate'
+    'invalidate',
+    'whitelist',
+    'blacklist',
+    'merge',
+    'disable',
+    'document',
+    'simplify',
+    'extract',
+    'downgrade'
 ]);
 
 
