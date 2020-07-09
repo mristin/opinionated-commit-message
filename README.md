@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v1.0.0
+        uses: mristin/opinionated-commit-message@v2.0.0-pre1
 ```
 
 ## Checked Events
@@ -99,7 +99,7 @@ the workflow file. For example:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v1.0.0
+        uses: mristin/opinionated-commit-message@v2.0.0-pre1
         with:
           additional-verbs: 'chrusimusi, unit-test'
 ```
