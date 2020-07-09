@@ -83,6 +83,27 @@ are checked.
 
 On push, all the commit messages *of the push* are verified.
 
+## List of Verbs
+
+Since the subject needs to start with a verb in the imperative mood, we 
+pre-compiled a whitelist of most frequent English verbs together with verbs 
+frequently used in commit messages from our own projects.
+
+However, given the variety of projects in the wild, this whitelist is not
+sufficient to cover all the possible verbs. We therefore introduce the action
+input `additional-verbs` so that you can add your own verbs.
+
+The additional verbs are given as a comma or semicolon separated string in 
+the workflow file. For example:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v1.0.0
+        with:
+          additional-verbs: 'chrusimusi, unit-test'
+```
+
 ## Known Issue
 
 Commit messages of the pull request are not verified unless you trigger the 

@@ -38,7 +38,20 @@ const capitalizedWordRe = new RegExp('^([A-Z][a-z]*)[^a-zA-Z]');
 
 const suffixHashCodeRe = new RegExp('\\s?\\(\\s*#[a-zA-Z_0-9]+\\s*\\)$');
 
-function checkSubject(subject: string): string[] {
+function checkSubject(subject: string, additionalVerbs: Set<string>): string[] {
+  // Pre-condition
+  for (const verb of additionalVerbs) {
+    if (verb.length === 0) {
+      throw new Error(`Unexpected empty additional verb`);
+    }
+
+    if (verb != verb.toLowerCase()) {
+      throw new Error(
+        `All additional verbs expected in lower case, but got: ${verb}`
+      );
+    }
+  }
+
   const errors: string[] = [];
 
   // Tolerate the hash code referring, e.g., to a pull request.
@@ -66,16 +79,32 @@ function checkSubject(subject: string): string[] {
           'but got none.'
       );
     }
+
     const word = match[1];
-    if (!mostFrequentEnglishVerbs.SET.has(word.toLowerCase())) {
-      errors.push(
-        'The subject must start in imperative mood with one of the ' +
-          `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
-          'Please see ' +
-          'https://github.com/mristin/opinionated-commit-message/blob/master/' +
-          'src/mostFrequentEnglishVerbs.ts ' +
-          'for a complete list.'
-      );
+    if (
+      !mostFrequentEnglishVerbs.SET.has(word.toLowerCase()) &&
+      !additionalVerbs.has(word.toLowerCase())
+    ) {
+      if (additionalVerbs.size === 0) {
+        errors.push(
+          'The subject must start in imperative mood with one of the ' +
+            `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
+            'Please see ' +
+            'https://github.com/mristin/opinionated-commit-message/blob/master/' +
+            'src/mostFrequentEnglishVerbs.ts ' +
+            'for a complete list.'
+        );
+      } else {
+        errors.push(
+          'The subject must start in imperative mood with one of the ' +
+            `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
+            'Please see ' +
+            'https://github.com/mristin/opinionated-commit-message/blob/master/' +
+            'src/mostFrequentEnglishVerbs.ts ' +
+            'for a complete list and ' +
+            'also revisit your list of additional verbs.'
+        );
+      }
     }
   }
 
@@ -137,7 +166,7 @@ const mergeMessageRe = new RegExp(
     'into [^\\000-\\037\\177 ~^:?*[]+$'
 );
 
-export function check(message: string): string[] {
+export function check(message: string, additionalVerbs: Set<string>): string[] {
   const errors: string[] = [];
 
   if (mergeMessageRe.test(message)) {
@@ -153,7 +182,7 @@ export function check(message: string): string[] {
     }
     const subjectBody = maybeSubjectBody.subjectBody;
 
-    errors.push(...checkSubject(subjectBody.subject));
+    errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
     errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
   }
 

@@ -7,3 +7,8 @@ runs:
 branding:
   icon: 'check'
   color: 'blue'
+inputs:
+  additional-verbs:
+    description: 'Additional verbs in imperative mood to be accepted in checks'
+    required: false
+    default: ''

@@ -568,7 +568,16 @@ function splitSubjectBody(message) {
 }
 const capitalizedWordRe = new RegExp('^([A-Z][a-z]*)[^a-zA-Z]');
 const suffixHashCodeRe = new RegExp('\\s?\\(\\s*#[a-zA-Z_0-9]+\\s*\\)$');
-function checkSubject(subject) {
+function checkSubject(subject, additionalVerbs) {
+    // Pre-condition
+    for (const verb of additionalVerbs) {
+        if (verb.length === 0) {
+            throw new Error(`Unexpected empty additional verb`);
+        }
+        if (verb != verb.toLowerCase()) {
+            throw new Error(`All additional verbs expected in lower case, but got: ${verb}`);
+        }
+    }
     const errors = [];
     // Tolerate the hash code referring, e.g., to a pull request.
     // These hash codes are usually added automatically by Github and
@@ -588,13 +597,25 @@ function checkSubject(subject) {
                 'but got none.');
         }
         const word = match[1];
-        if (!mostFrequentEnglishVerbs.SET.has(word.toLowerCase())) {
-            errors.push('The subject must start in imperative mood with one of the ' +
-                `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
-                'Please see ' +
-                'https://github.com/mristin/opinionated-commit-message/blob/master/' +
-                'src/mostFrequentEnglishVerbs.ts ' +
-                'for a complete list.');
+        if (!mostFrequentEnglishVerbs.SET.has(word.toLowerCase()) &&
+            !additionalVerbs.has(word.toLowerCase())) {
+            if (additionalVerbs.size === 0) {
+                errors.push('The subject must start in imperative mood with one of the ' +
+                    `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
+                    'Please see ' +
+                    'https://github.com/mristin/opinionated-commit-message/blob/master/' +
+                    'src/mostFrequentEnglishVerbs.ts ' +
+                    'for a complete list.');
+            }
+            else {
+                errors.push('The subject must start in imperative mood with one of the ' +
+                    `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
+                    'Please see ' +
+                    'https://github.com/mristin/opinionated-commit-message/blob/master/' +
+                    'src/mostFrequentEnglishVerbs.ts ' +
+                    'for a complete list and ' +
+                    'also revisit your list of additional verbs.');
+            }
         }
     }
     if (subjectWoCode.endsWith('.')) {
@@ -635,7 +656,7 @@ function checkBody(subject, bodyLines) {
 }
 const mergeMessageRe = new RegExp("^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
     'into [^\\000-\\037\\177 ~^:?*[]+$');
-function check(message) {
+function check(message, additionalVerbs) {
     const errors = [];
     if (mergeMessageRe.test(message)) {
         return errors;
@@ -649,7 +670,7 @@ function check(message) {
             throw Error('Unexpected undefined subjectBody');
         }
         const subjectBody = maybeSubjectBody.subjectBody;
-        errors.push(...checkSubject(subjectBody.subject));
+        errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
         errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
     }
     // Post-condition
@@ -4461,28 +4482,40 @@ const core = __importStar(__webpack_require__(470));
 const commitMessages = __importStar(__webpack_require__(281));
 const inspection = __importStar(__webpack_require__(117));
 const represent = __importStar(__webpack_require__(110));
+function runWithExceptions() {
+    const messages = commitMessages.retrieve();
+    const additionalVerbsInput = core.getInput('additional-verbs', {
+        required: false
+    });
+    const additionalVerbs = additionalVerbsInput !== null && additionalVerbsInput !== undefined
+        ? new Set(additionalVerbsInput
+            .split(/[,;]/)
+            .map(verb => verb.trim().toLowerCase())
+            .filter(verb => verb.length > 0))
+        : new Set();
+    // Parts of the error message to be concatenated with '\n'
+    const parts = [];
+    for (const [messageIndex, message] of messages.entries()) {
+        const errors = inspection.check(message, additionalVerbs);
+        if (errors.length > 0) {
+            const repr = represent.formatErrors(message, messageIndex, errors);
+            parts.push(repr);
+        }
+        else {
+            core.info(`The message is OK:\n---\n${message}\n---`);
+        }
+    }
+    const errorMessage = parts.join('\n');
+    if (errorMessage.length > 0) {
+        core.setFailed(errorMessage);
+    }
+}
 /**
  * Main function
  */
 function run() {
     try {
-        const messages = commitMessages.retrieve();
-        // Parts of the error message to be concatenated with '\n'
-        const parts = [];
-        for (const [messageIndex, message] of messages.entries()) {
-            const errors = inspection.check(message);
-            if (errors.length > 0) {
-                const repr = represent.formatErrors(message, messageIndex, errors);
-                parts.push(repr);
-            }
-            else {
-                core.info(`The message is OK:\n---\n${message}\n---`);
-            }
-        }
-        const errorMessage = parts.join('\n');
-        if (errorMessage.length > 0) {
-            core.setFailed(errorMessage);
-        }
+        runWithExceptions();
     }
     catch (error) {
         core.error(error);
