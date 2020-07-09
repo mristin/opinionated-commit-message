@@ -15,30 +15,26 @@ export function retrieve(): string[] {
 
   switch (github.context.eventName) {
     case 'pull_request': {
-      if (
-        github.context.payload &&
-        github.context.payload.pull_request &&
-        github.context.payload.pull_request.title
-      ) {
-        let msg: string = github.context.payload.pull_request.title;
-        if (github.context.payload.pull_request.body) {
-          msg = msg.concat('\n\n', github.context.payload.pull_request.body);
+      const pull_request = github.context.payload?.pull_request;
+
+      if (pull_request) {
+        let msg: string = pull_request.title;
+        if (pull_request.body) {
+          msg = msg.concat('\n\n', pull_request.body);
         }
         result.push(msg);
       } else {
         throw new Error(`No pull_request found in the payload.`);
       }
+
       break;
     }
     case 'push': {
-      if (
-        github.context.payload &&
-        github.context.payload.commits &&
-        github.context.payload.commits.length
-      ) {
-        for (const i in github.context.payload.commits) {
-          if (github.context.payload.commits[i].message) {
-            result.push(github.context.payload.commits[i].message);
+      const commits = github.context.payload?.commits;
+      if (commits) {
+        for (const commit of commits) {
+          if (commit.message) {
+            result.push(commit.message);
           }
         }
       }
