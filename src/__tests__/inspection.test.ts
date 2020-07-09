@@ -89,8 +89,10 @@ it('reports too long a body line.', () => {
 
   const errors = inspection.check(message);
   expect(errors).toEqual([
-    'The line 3 of the message (line 1 of the body) exceeds ' +
-      'the limit of 72 characters.'
+    'The line 3 of the message (line 1 of the body) exceeds the limit of ' +
+      '72 characters. The line contains 97 characters: ' +
+      '"This replaces the SomeClass with OtherClass in all of the module since ' +
+      'Some class was deprecated."'
   ]);
 });
 

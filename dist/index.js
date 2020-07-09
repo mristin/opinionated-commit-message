@@ -575,7 +575,8 @@ function checkSubject(subject) {
     // similar services.
     const subjectWoCode = subject.replace(suffixHashCodeRe, '');
     if (subjectWoCode.length > 50) {
-        errors.push(`The subject exceeds the limit of 50 characters, got: ${subject.length}`);
+        errors.push(`The subject exceeds the limit of 50 characters ` +
+            `(got: ${subject.length}, JSONified: ${JSON.stringify(subjectWoCode)})`);
     }
     const match = capitalizedWordRe.exec(subjectWoCode);
     if (!match) {
@@ -589,7 +590,8 @@ function checkSubject(subject) {
         const word = match[1];
         if (!mostFrequentEnglishVerbs.SET.has(word.toLowerCase())) {
             errors.push('The subject must start in imperative mood with one of the ' +
-                'most frequent English verbs. Please see ' +
+                `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
+                'Please see ' +
                 'https://github.com/mristin/opinionated-commit-message/blob/master/' +
                 'src/mostFrequentEnglishVerbs.ts ' +
                 'for a complete list.');
@@ -603,12 +605,13 @@ function checkSubject(subject) {
 function checkBody(subject, bodyLines) {
     const errors = [];
     if (bodyLines.length === 0) {
-        errors.push('At least one line is expected in the body.');
+        errors.push('At least one line is expected in the body, ' + 'but got empty body.');
     }
     for (const [i, line] of bodyLines.entries()) {
         if (line.length > 72) {
             errors.push(`The line ${i + 3} of the message (line ${i + 1} of the body) ` +
-                `exceeds the limit of 72 characters.`);
+                'exceeds the limit of 72 characters. ' +
+                `The line contains ${line.length} characters: ${JSON.stringify(line)}`);
         }
     }
     const bodyFirstWordMatch = capitalizedWordRe.exec(bodyLines[0]);
