@@ -682,5 +682,7 @@ export const SET = new Set([
   'relax',
   'wrap',
   'unwrap',
-  'rewrap'
+  'rewrap',
+  'delete',
+  'erase'
 ]);
