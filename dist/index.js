@@ -551,9 +551,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.check = void 0;
 const mostFrequentEnglishVerbs = __importStar(__webpack_require__(538));
-function splitSubjectBody(message) {
-    const result = { errors: [] };
+function splitLines(message) {
     const lines = message.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        lines[i] = lines[i].replace(/\r$/, '');
+    }
+    return lines;
+}
+function splitSubjectBody(lines) {
+    const result = { errors: [] };
     if (lines.length < 3) {
         result.errors.push(`Expected at least three lines (subject, empty, body), ` +
             `but got: ${lines.length}`);
@@ -661,7 +667,8 @@ function check(message, additionalVerbs) {
     if (mergeMessageRe.test(message)) {
         return errors;
     }
-    const maybeSubjectBody = splitSubjectBody(message);
+    const lines = splitLines(message);
+    const maybeSubjectBody = splitSubjectBody(lines);
     if (maybeSubjectBody.errors.length > 0) {
         errors.push(...maybeSubjectBody.errors);
     }
