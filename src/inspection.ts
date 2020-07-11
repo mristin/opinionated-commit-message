@@ -10,10 +10,18 @@ interface MaybeSubjectBody {
   errors: string[];
 }
 
-function splitSubjectBody(message: string): MaybeSubjectBody {
+function splitLines(message: string): string[] {
+  const lines = message.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    lines[i] = lines[i].replace(/\r$/, '');
+  }
+
+  return lines;
+}
+
+function splitSubjectBody(lines: string[]): MaybeSubjectBody {
   const result: MaybeSubjectBody = {errors: []};
 
-  const lines = message.split('\n');
   if (lines.length < 3) {
     result.errors.push(
       `Expected at least three lines (subject, empty, body), ` +
@@ -173,7 +181,9 @@ export function check(message: string, additionalVerbs: Set<string>): string[] {
     return errors;
   }
 
-  const maybeSubjectBody = splitSubjectBody(message);
+  const lines = splitLines(message);
+
+  const maybeSubjectBody = splitSubjectBody(lines);
   if (maybeSubjectBody.errors.length > 0) {
     errors.push(...maybeSubjectBody.errors);
   } else {
