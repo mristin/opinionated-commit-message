@@ -684,5 +684,10 @@ export const SET = new Set([
   'unwrap',
   'rewrap',
   'delete',
-  'erase'
+  'erase',
+  'sync',
+  'synchronize',
+  'synchronise',
+  'gitignore',
+  'initialize',
 ]);
