@@ -8649,7 +8649,14 @@ exports.SET = new Set([
     'relax',
     'wrap',
     'unwrap',
-    'rewrap'
+    'rewrap',
+    'delete',
+    'erase',
+    'sync',
+    'synchronize',
+    'synchronise',
+    'gitignore',
+    'initialize'
 ]);
 
 
