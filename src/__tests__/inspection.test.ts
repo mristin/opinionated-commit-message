@@ -128,12 +128,31 @@ it('reports too long a body line.', () => {
   ]);
 });
 
-it('accepts a body line of exactly 72 characters', () => {
+it('accepts a body line of exactly 72 characters.', () => {
   const message =
     'Do something\n' +
     '\n' +
     'This patch fixes a typo in the readme file where this project was called\n' +
     'dead-csharp instead of doctest-csharp.\n' +
+    '1234567890' +
+    '1234567890' +
+    '1234567890' +
+    '1234567890' +
+    '1234567890' +
+    '1234567890' +
+    '1234567890' +
+    '12';
+
+  const errors = inspection.check(message, new Set<string>());
+  expect(errors).toEqual([]);
+});
+
+it('ignores the carriage return.', () => {
+  const message =
+    'Do something\n' +
+    '\n' +
+    'This patch fixes a typo in the readme file where this project was called\r\n' +
+    'dead-csharp instead of doctest-csharp.\r\n' +
     '1234567890' +
     '1234567890' +
     '1234567890' +
