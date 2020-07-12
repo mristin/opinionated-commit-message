@@ -22,3 +22,4 @@ jobs:
       - uses: ./
         with:
           additional-verbs: 'chrusimusi, unit-test'
+          path-to-additional-verbs: src/additional-verbs.txt

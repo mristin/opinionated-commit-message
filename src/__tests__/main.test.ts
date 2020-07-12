@@ -1,8 +1,11 @@
+import fs from 'fs';
+
 import * as core from '@actions/core';
 
 import * as mainImpl from '../mainImpl';
 import * as commitMessages from '../commitMessages';
 
+jest.mock('fs');
 jest.mock('@actions/core');
 jest.mock('../commitMessages');
 
@@ -16,7 +19,36 @@ it('considers additional verbs.', () => {
   const mockSetFailed = jest.fn();
   (core as any).setFailed = mockSetFailed;
 
-  (core as any).getInput = () => 'rewrap,table';
+  (core as any).getInput = (name: string) =>
+    name === 'additional-verbs' ? 'rewrap,table' : null;
+
+  mainImpl.run();
+
+  expect(mockSetFailed.mock.calls).toEqual([]);
+});
+
+it('considers additional verbs from path.', () => {
+  (commitMessages.retrieve as any).mockImplementation(() => [
+    'Table SomeClass\n\nThis is a dummy commit.'
+  ]);
+
+  const mockSetFailed = jest.fn();
+  (core as any).setFailed = mockSetFailed;
+
+  const pathToVerbs = 'src/verbs.txt';
+
+  (core as any).getInput = (name: string) =>
+    name === 'path-to-additional-verbs' ? pathToVerbs : null;
+
+  (fs as any).existsSync = (path: string) => path === pathToVerbs;
+
+  (fs as any).readFileSync = (path: string) => {
+    if (path === pathToVerbs) {
+      return 'rewrap\ntable';
+    }
+
+    throw new Error(`Unexpected readFileSync in the unit test from: ${path}`);
+  };
 
   mainImpl.run();
 
