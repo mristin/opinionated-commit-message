@@ -93,8 +93,8 @@ However, given the variety of projects in the wild, this whitelist is not
 sufficient to cover all the possible verbs. We therefore introduce the action
 input `additional-verbs` so that you can add your own verbs.
 
-The additional verbs are given as a comma or semicolon separated string in 
-the workflow file. For example:
+The additional verbs are given as a comma, semicolon or new line separated 
+string in the workflow file. For example:
 
 ```yaml
     steps:
@@ -103,6 +103,19 @@ the workflow file. For example:
         with:
           additional-verbs: 'chrusimusi, unit-test'
 ```
+
+If you prefer to have your additional verbs in imperative mood in a separate
+file (*e.g.*, to keep the workflow file succinct), you can supply the path
+as input:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v2.0.0-pre1
+        with:
+          path-to-additional-verbs: 'src/additional-verbs.txt'
+```
+
 
 ## Known Issue
 
