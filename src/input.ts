@@ -1,9 +1,7 @@
-import * as core from '@actions/core';
-
-export function parseVerbs(text: string): Array<string> {
+export function parseVerbs(text: string): string[] {
   const lines = text.split('\n');
 
-  const verbs = new Array<string>();
+  const verbs: string[] = [];
   for (const line of lines) {
     const lineVerbs = line
       .split(/[,;]/)

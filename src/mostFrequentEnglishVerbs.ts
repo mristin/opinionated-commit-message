@@ -689,5 +689,6 @@ export const SET = new Set([
   'synchronize',
   'synchronise',
   'gitignore',
-  'initialize'
+  'initialize',
+  'translate'
 ]);

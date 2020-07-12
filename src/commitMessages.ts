@@ -1,4 +1,3 @@
-import * as core from '@actions/core';
 import * as github from '@actions/github';
 
 // This code has been taken from https://github.com/GsActions/commit-message-checker/blob/master/src/input-helper.ts
@@ -15,12 +14,12 @@ export function retrieve(): string[] {
 
   switch (github.context.eventName) {
     case 'pull_request': {
-      const pull_request = github.context.payload?.pull_request;
+      const pullRequest = github.context.payload?.pull_request;
 
-      if (pull_request) {
-        let msg: string = pull_request.title;
-        if (pull_request.body) {
-          msg = msg.concat('\n\n', pull_request.body);
+      if (pullRequest) {
+        let msg: string = pullRequest.title;
+        if (pullRequest.body) {
+          msg = msg.concat('\n\n', pullRequest.body);
         }
         result.push(msg);
       } else {

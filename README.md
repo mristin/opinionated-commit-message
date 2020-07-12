@@ -116,6 +116,17 @@ as input:
           path-to-additional-verbs: 'src/additional-verbs.txt'
 ```
 
+## Local Usage
+
+We translated the opinionanted-commit-message to a powershell script so that
+you can include it in your local pre-commit and pre-push checks.
+
+The script is available at: [`local/powershell/OpinionatedCommitMessage.ps1`](
+local/powershell/OpinionatedCommitMessage.ps1
+)
+
+You can just copy & paste it into your project. There are no dependencies
+to be installed.
 
 ## Known Issue
 
