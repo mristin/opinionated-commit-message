@@ -1,0 +1,264 @@
+#!/usr/bin/env pwsh
+param(
+    [Parameter(HelpMessage = "Message to be verified", Mandatory = $true)]
+    [string]
+    $message,
+
+    [Parameter(HelpMessage = "Additional verbs in imperative mood separated by comma, semicolon or newline")]
+    [string]
+    $additionalVerbs = $null,
+
+    [Parameter(HelpMessage = "Path to additional verbs in imperative mood")]
+    [string]
+    $pathToAdditionalVerbs = $null,
+
+    [Parameter(HelpMessage = "If set, the script does not throw an exception on failed checks")]
+    [switch]
+    $dontThrow = $false
+)
+
+<#
+.SYNOPSIS
+This script checks commit messages according to an opinionated style.
+
+.DESCRIPTION
+Opinionated-commit-message is a Github Action which checks commit messages according to an opinionated style.
+This script is a rewrite in Powershell meant for local usage.
+
+The style was inspired by https://chris.beams.io/posts/git-commit/:
+* Separate subject from body with a blank line
+* Limit the subject line to 50 characters
+* Capitalize the subject line
+* Do not end the subject line with a period
+* Use the imperative mood in the subject line
+* Wrap the body at 72 characters
+* Use the body to explain what and why (instead of how)
+
+Here is an example commit message:
+```
+Set up Open ID HttpClient with default proxy
+
+Previously, the Open ID HttpClient was simply instantiated without
+default proxy credentials. However, if there are company proxies,
+HttpClient must use the default proxy with OpenID Connect.
+```
+#>
+
+# This list is automatically filled out by src/scripts/toPowershell.ts.
+# Do NOT edit or append!
+$frequentVerbs = @()
+# This list is automatically filled out by src/scripts/toPowershell.ts.
+# Do NOT edit or append!
+
+
+function ParseAdditionalVerbs($text)
+{
+    [string[]]$verbs = @()
+
+    $lines = $text -Split "`n"
+
+    foreach ($line in $lines)
+    {
+        $parts = [Regex]::split($line, '[,;]')
+        foreach ($part in $parts)
+        {
+            $trimmed = $part.Trim()
+            if ($trimmed -ne "")
+            {
+                $verbs += $trimmed.ToLower()
+            }
+        }
+    }
+
+    return $verbs
+}
+
+$capitalizedWordRe = [Regex]::new('^([A-Z][a-z]*)[^a-zA-Z]')
+$suffixHashCodeRe = [Regex]::new('\s?\(\s*#[a-zA-Z_0-9]+\s*\)$')
+
+function CheckSubject([string]$subject, [hashtable]$verbs)
+{
+    # Precondition
+    foreach ($verb in $verbs.Keys)
+    {
+        if ($verb -eq "")
+        {
+            throw "Unexpected empty verb"
+        }
+
+        if ($verb -ne $verb.ToLower())
+        {
+            throw "Expected all verbs to be lowercase, but got: $verb"
+        }
+    }
+
+    [string[]]$errors = @()
+
+    $subjectWoCode = $subject -Replace $suffixHashCodeRe
+    if ($subjectWoCode.Length -gt 50)
+    {
+        $errors += "The subject exceeds the limit of 50 characters " +    `
+              "(got: $( $subjectWoCode.Length )): $( $subjectWoCode|ConvertTo-Json )"
+    }
+
+    $matches = $capitalizedWordRe.Matches($subjectWoCode)
+    if ($matches.Count -ne 1)
+    {
+        $errors += 'The subject must start with a capitalized verb (e.g., "Change").'
+    }
+    else
+    {
+        $match = $matches[0]
+        $word = $match.Groups[1].Value
+        $wordLower = $word.ToLower()
+
+        if (!$verbs.Contains($wordLower) -or ($false -eq $verbs[$wordLower]))
+        {
+            $errors += "The subject must start with a verb in imperative mood (according to a whitelist), " +   `
+                  "but got: $($word|ConvertTo-Json); if this is a false positive, consider adding the verb " + `
+                  "to -additionalVerbs or to the file referenced by -pathToAdditionalVerbs."
+        }
+    }
+
+    if ( $subjectWoCode.EndsWith("."))
+    {
+        $errors += "The subject must not end with a dot ('.')."
+    }
+
+    return $errors
+}
+
+function CheckBody([string]$subject, [string[]] $bodyLines)
+{
+    $errors = @()
+
+    if($bodyLines.Count -eq 0)
+    {
+        $errors += "At least one line is expected in the body, but got empty body."
+        return $errors
+    }
+
+    for($i = 0; $i -lt $bodyLines.Count; $i++)
+    {
+        $line = $bodyLines[$i]
+        if($line.Length -gt 72)
+        {
+            $errors += "The line $($i + 3) of the message (line $($i + 1) of the body) " + `
+                "exceeds the limit of 72 characters. The line contains $($line.Length) characters: " + `
+                "$($line|ConvertTo-Json)."
+        }
+    }
+
+    $bodyFirstWordMatches = $capitalizedWordRe.Matches($bodyLines[0])
+    if($bodyFirstWordMatches.Count -eq 1)
+    {
+        $bodyFirstWord = $bodyFirstWordMatches[0].Groups[1].Value
+
+        $subjectFirstWordMatches = $capitalizedWordRe.Matches($subject)
+        if($subjectFirstWordMatches.Count -eq 1)
+        {
+            $subjectFirstWord = $subjectFirstWordMatches[0].Groups[1].Value
+
+            if($subjectFirstWord.ToLower() -eq $bodyFirstWord.ToLower())
+            {
+                $errors += "The first word of the subject ($($subjectFirstWord|ConvertTo-Json)) must not match " + `
+                    "the first word of the body."
+            }
+        }
+    }
+
+    return $errors
+}
+
+function Check([string]$text, [hashtable]$verbs)
+{
+    [string[]]$errors = @()
+
+    if($text.StartsWith("Merge branch"))
+    {
+        return $errors
+    }
+
+    $lines = $text -Split "`n"
+
+    if ($lines.Count -lt 3)
+    {
+        $errors += "Expected at least three lines (subject, empty, body), but got: $( $lines.Count )"
+        return $errors
+    }
+
+    $trimmedLines = @()
+    foreach ($line in $lines)
+    {
+        $trimmedLines += $line -Replace '\r$'
+    }
+
+    if ($trimmedLines[1] -ne "")
+    {
+        $errors += "Expected an empty line between the subject and the body, " +   `
+                       "but got a line: $( $trimmedLines[1]|ConvertTo-Json )"
+        return $errors
+    }
+
+    $subject = $trimmedLines[0]
+    $errors = $errors + ( CheckSubject -subject $subject -verbs $verbs )
+
+    $bodyLines = $trimmedLines |Select-Object -Skip 2
+    $errors = $errors + ( CheckBody -subject $subject -bodyLines $bodyLines)
+
+    return $errors
+}
+
+function Main
+{
+    $verbs = @{ }
+
+    if ($null -ne $additionalVerbs)
+    {
+        $verbList = ParseAdditionalVerbs($additionalVerbs)
+        foreach ($verb in $verbList)
+        {
+            $verbs[$verb] = $true
+        }
+    }
+
+    if ($null -ne $pathToAdditionalVerbs -and ("" -ne $pathToAdditionalVerbs))
+    {
+        if (!(Test-Path $pathToAdditionalVerbs))
+        {
+            throw "The file referenced by pathTAdditionalVerbs does not exist: $( $pathToAdditionalVerbs|ConvertTo-Json )"
+        }
+
+        $verbList = ParseAdditionalVerbs(Get-Content -Path $pathToAdditionalVerbs)
+        foreach ($verb in $verbList)
+        {
+            $verbs[$verb] = $true
+        }
+    }
+
+    foreach ($verb in $frequentVerbs)
+    {
+        $verbs[$verb] = $true
+    }
+
+    $errors = Check -text $message -verbs $verbs
+
+    if ($errors.Count -eq 0)
+    {
+        Write-Host "The message is OK."
+    }
+    else
+    {
+        foreach ($error in $errors)
+        {
+            Write-Host "* $error"
+        }
+
+        if (!$dontThrow)
+        {
+            throw "One or more checks failed."
+        }
+    }
+}
+
+Main

@@ -2,7 +2,7 @@ export function formatErrors(
   message: string,
   messageIndex: number,
   errors: string[]
-) {
+): string {
   if (errors.length === 0) {
     throw Error('Unexpected empty errors');
   }

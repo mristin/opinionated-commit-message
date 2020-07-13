@@ -53,7 +53,7 @@ function checkSubject(subject: string, additionalVerbs: Set<string>): string[] {
       throw new Error(`Unexpected empty additional verb`);
     }
 
-    if (verb != verb.toLowerCase()) {
+    if (verb !== verb.toLowerCase()) {
       throw new Error(
         `All additional verbs expected in lower case, but got: ${verb}`
       );
@@ -128,7 +128,7 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
 
   if (bodyLines.length === 0) {
     errors.push(
-      'At least one line is expected in the body, ' + 'but got empty body.'
+      'At least one line is expected in the body, but got empty body.'
     );
   }
 
@@ -197,7 +197,7 @@ export function check(message: string, additionalVerbs: Set<string>): string[] {
   }
 
   // Post-condition
-  for (const error in errors) {
+  for (const error of errors) {
     if (error.endsWith('\n')) {
       throw Error(`Unexpected error ending in a new-line character: ${error}`);
     }

@@ -8,12 +8,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v1
-      - run: |
-          npm install
-          npm run all
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Execute all scripts
+        run: npm run all
 
   test:
     runs-on: ubuntu-latest

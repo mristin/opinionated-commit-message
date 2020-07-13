@@ -580,7 +580,7 @@ function checkSubject(subject, additionalVerbs) {
         if (verb.length === 0) {
             throw new Error(`Unexpected empty additional verb`);
         }
-        if (verb != verb.toLowerCase()) {
+        if (verb !== verb.toLowerCase()) {
             throw new Error(`All additional verbs expected in lower case, but got: ${verb}`);
         }
     }
@@ -632,7 +632,7 @@ function checkSubject(subject, additionalVerbs) {
 function checkBody(subject, bodyLines) {
     const errors = [];
     if (bodyLines.length === 0) {
-        errors.push('At least one line is expected in the body, ' + 'but got empty body.');
+        errors.push('At least one line is expected in the body, but got empty body.');
     }
     for (const [i, line] of bodyLines.entries()) {
         if (line.length > 72) {
@@ -681,7 +681,7 @@ function check(message, additionalVerbs) {
         errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
     }
     // Post-condition
-    for (const error in errors) {
+    for (const error of errors) {
         if (error.endsWith('\n')) {
             throw Error(`Unexpected error ending in a new-line character: ${error}`);
         }
@@ -4040,11 +4040,11 @@ function retrieve() {
     const result = [];
     switch (github.context.eventName) {
         case 'pull_request': {
-            const pull_request = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
-            if (pull_request) {
-                let msg = pull_request.title;
-                if (pull_request.body) {
-                    msg = msg.concat('\n\n', pull_request.body);
+            const pullRequest = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
+            if (pullRequest) {
+                let msg = pullRequest.title;
+                if (pullRequest.body) {
+                    msg = msg.concat('\n\n', pullRequest.body);
                 }
                 result.push(msg);
             }
@@ -4483,23 +4483,46 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.run = void 0;
+const fs_1 = __importDefault(__webpack_require__(747));
 const core = __importStar(__webpack_require__(470));
 const commitMessages = __importStar(__webpack_require__(281));
 const inspection = __importStar(__webpack_require__(117));
 const represent = __importStar(__webpack_require__(110));
+const input = __importStar(__webpack_require__(553));
 function runWithExceptions() {
     const messages = commitMessages.retrieve();
+    const additionalVerbs = new Set();
+    // Parse additional-verbs input
     const additionalVerbsInput = core.getInput('additional-verbs', {
         required: false
     });
-    const additionalVerbs = additionalVerbsInput !== null && additionalVerbsInput !== undefined
-        ? new Set(additionalVerbsInput
-            .split(/[,;]/)
-            .map(verb => verb.trim().toLowerCase())
-            .filter(verb => verb.length > 0))
-        : new Set();
+    if (additionalVerbsInput) {
+        for (const verb of input.parseVerbs(additionalVerbsInput)) {
+            additionalVerbs.add(verb);
+        }
+    }
+    // Parse additional-verbs-from-path input
+    const pathToAdditionalVerbs = core.getInput('path-to-additional-verbs', {
+        required: false
+    });
+    if (pathToAdditionalVerbs) {
+        if (!fs_1.default.existsSync(pathToAdditionalVerbs)) {
+            const error = 'The file referenced by path-to-additional-verbs could ' +
+                `not be found: ${pathToAdditionalVerbs}`;
+            core.error(error);
+            core.setFailed(error);
+            return;
+        }
+        const text = fs_1.default.readFileSync(pathToAdditionalVerbs).toString('utf-8');
+        for (const verb of input.parseVerbs(text)) {
+            additionalVerbs.add(verb);
+        }
+    }
     // Parts of the error message to be concatenated with '\n'
     const parts = [];
     for (const [messageIndex, message] of messages.entries()) {
@@ -8663,7 +8686,8 @@ exports.SET = new Set([
     'synchronize',
     'synchronise',
     'gitignore',
-    'initialize'
+    'initialize',
+    'translate'
 ]);
 
 
@@ -9218,6 +9242,30 @@ const getPage = __webpack_require__(265)
 function getNextPage (octokit, link, headers) {
   return getPage(octokit, link, 'next', headers)
 }
+
+
+/***/ }),
+
+/***/ 553:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseVerbs = void 0;
+function parseVerbs(text) {
+    const lines = text.split('\n');
+    const verbs = [];
+    for (const line of lines) {
+        const lineVerbs = line
+            .split(/[,;]/)
+            .map(verb => verb.trim().toLowerCase())
+            .filter(verb => verb.length > 0);
+        verbs.push(...lineVerbs);
+    }
+    return verbs;
+}
+exports.parseVerbs = parseVerbs;
 
 
 /***/ }),
