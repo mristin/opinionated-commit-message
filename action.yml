@@ -12,3 +12,7 @@ inputs:
     description: 'Additional verbs in imperative mood to be accepted in checks'
     required: false
     default: ''
+  path-to-additional-verbs:
+    description: 'Path to the file containing the additional verbs in imperative mood to be accepted in checks'
+    required: false
+    default: ''
