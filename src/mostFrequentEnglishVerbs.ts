@@ -719,5 +719,11 @@ export const SET = new Set([
   'enumerate',
   'sample',
   'randomize',
-  'categorize'
+  'categorize',
+  'assign',
+  'standardize',
+  'in-line',
+  'inline',
+  'redo',
+  're-do'
 ]);
