@@ -26,3 +26,11 @@ jobs:
         with:
           additional-verbs: 'chrusimusi, unit-test'
           path-to-additional-verbs: src/additional-verbs.txt
+
+  test-allow-one-liners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ./
+        with:
+          allow-one-liners: 'true'

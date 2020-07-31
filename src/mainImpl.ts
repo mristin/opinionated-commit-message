@@ -47,11 +47,29 @@ function runWithExceptions(): void {
     }
   }
 
+  // Parse allow-one-liners input
+  const allowOneLinersText = core.getInput('allow-one-liners', {
+    required: false
+  });
+
+  const allowOneLiners: boolean | null = !allowOneLinersText
+    ? false
+    : input.parseAllowOneLiners(allowOneLinersText);
+
+  if (allowOneLiners === null) {
+    const error =
+      'Unexpected value for allow-one-liners. ' +
+      `Expected either 'true' or 'false', got: ${allowOneLinersText}`;
+    core.error(error);
+    core.setFailed(error);
+    return;
+  }
+
   // Parts of the error message to be concatenated with '\n'
   const parts: string[] = [];
 
   for (const [messageIndex, message] of messages.entries()) {
-    const errors = inspection.check(message, additionalVerbs);
+    const errors = inspection.check(message, additionalVerbs, allowOneLiners);
 
     if (errors.length > 0) {
       const repr: string = represent.formatErrors(

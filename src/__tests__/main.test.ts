@@ -55,6 +55,20 @@ it('considers additional verbs from path.', () => {
   expect(mockSetFailed.mock.calls).toEqual([]);
 });
 
+it('considers allow-one-liners.', () => {
+  (commitMessages.retrieve as any).mockImplementation(() => ['Do something']);
+
+  const mockSetFailed = jest.fn();
+  (core as any).setFailed = mockSetFailed;
+
+  (core as any).getInput = (name: string) =>
+    name === 'allow-one-liners' ? 'true' : null;
+
+  mainImpl.run();
+
+  expect(mockSetFailed.mock.calls).toEqual([]);
+});
+
 it('formats properly no error message.', () => {
   (commitMessages.retrieve as any).mockImplementation(() => [
     'Change SomeClass to OtherClass\n' +

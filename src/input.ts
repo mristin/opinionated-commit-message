@@ -13,3 +13,15 @@ export function parseVerbs(text: string): string[] {
 
   return verbs;
 }
+
+export function parseAllowOneLiners(text: string): boolean | null {
+  if (text === '' || text.toLowerCase() === 'false' || text === '0') {
+    return false;
+  }
+
+  if (text.toLowerCase() === 'true' || text === '1') {
+    return true;
+  }
+
+  return null;
+}

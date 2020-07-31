@@ -22,10 +22,16 @@ function splitLines(message: string): string[] {
 function splitSubjectBody(lines: string[]): MaybeSubjectBody {
   const result: MaybeSubjectBody = {errors: []};
 
-  if (lines.length < 3) {
+  if (lines.length === 0 || lines.length === 1) {
     result.errors.push(
-      `Expected at least three lines (subject, empty, body), ` +
+      'Expected at least three lines (subject, empty, body), ' +
         `but got: ${lines.length}`
+    );
+    return result;
+  } else if (lines.length === 2) {
+    result.errors.push(
+      'Expected at least three lines (subject, empty, body) ' +
+        `in a multi-line message, but got: ${lines.length}`
     );
     return result;
   }
@@ -130,6 +136,12 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
     errors.push(
       'At least one line is expected in the body, but got empty body.'
     );
+    return errors;
+  }
+
+  if (bodyLines.length === 1 && bodyLines[0].trim() === '') {
+    errors.push('Unexpected empty body');
+    return errors;
   }
 
   for (const [i, line] of bodyLines.entries()) {
@@ -174,7 +186,11 @@ const mergeMessageRe = new RegExp(
     'into [^\\000-\\037\\177 ~^:?*[]+$'
 );
 
-export function check(message: string, additionalVerbs: Set<string>): string[] {
+export function check(
+  message: string,
+  additionalVerbs: Set<string>,
+  allowOneLiners: boolean
+): string[] {
   const errors: string[] = [];
 
   if (mergeMessageRe.test(message)) {
@@ -183,17 +199,25 @@ export function check(message: string, additionalVerbs: Set<string>): string[] {
 
   const lines = splitLines(message);
 
-  const maybeSubjectBody = splitSubjectBody(lines);
-  if (maybeSubjectBody.errors.length > 0) {
-    errors.push(...maybeSubjectBody.errors);
+  if (lines.length === 0) {
+    errors.push(`The message is empty.`);
+    return errors;
+  } else if (lines.length === 1 && allowOneLiners) {
+    errors.push(...checkSubject(lines[0], additionalVerbs));
   } else {
-    if (maybeSubjectBody.subjectBody === undefined) {
-      throw Error('Unexpected undefined subjectBody');
-    }
-    const subjectBody = maybeSubjectBody.subjectBody;
+    const maybeSubjectBody = splitSubjectBody(lines);
+    if (maybeSubjectBody.errors.length > 0) {
+      errors.push(...maybeSubjectBody.errors);
+    } else {
+      if (maybeSubjectBody.subjectBody === undefined) {
+        throw Error('Unexpected undefined subjectBody');
+      }
+      const subjectBody = maybeSubjectBody.subjectBody;
 
-    errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
-    errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+      errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
+
+      errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+    }
   }
 
   // Post-condition
