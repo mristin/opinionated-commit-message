@@ -179,7 +179,7 @@ function TestOKMergeBranch
 
     if ($got -ne $expected)
     {
-        Write-Host "TestOKMergeBranch: OK"
+        Write-Host "TestOKMergeBranch: FAILED"
         WriteExpectedGot -expected $expected -got $got
         return $false
     }
@@ -245,6 +245,54 @@ function TestOKPathToAdditionalVerbs
     }
 }
 
+function TestOKWithAllowOneLiners
+{
+    $message = "Do something"
+    $got = (powershell `
+        -File OpinionatedCommitMessage.ps1 `
+        -message $message `
+        -allowOneLiners `
+        -dontThrow
+    )|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = "The message is OK.${nl}"
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestOKWithAllowOneLiners: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestOKWithAllowOneLiners: OK"
+    return $true
+}
+
+function TestFailWithAllowOneLiners
+{
+    $message = "Do something."
+    $got = (powershell `
+        -File OpinionatedCommitMessage.ps1 `
+        -message $message `
+        -allowOneLiners `
+        -dontThrow
+    )|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = "* The subject must not end with a dot ('.').${nl}"
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestFailWithAllowOneLiners: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestFailWithAllowOneLiners: OK"
+    return $true
+}
+
 function Main
 {
     Push-Location
@@ -263,6 +311,10 @@ function Main
         $success = TestOKCarriageReturn -and $success
         $success = TestOKAdditionalVerbs -and $success
         $success = TestOKPathToAdditionalVerbs -and $success
+        $success = TestOKWithAllowOneLiners -and $success
+        $success = TestFailWithAllowOneLiners -and $success
+
+        # TODO: TestFailAllowOneLiners
 
         if(!$success)
         {

@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v2.0.0-pre1
+        uses: mristin/opinionated-commit-message@v2
 ```
 
 ## Checked Events
@@ -99,7 +99,7 @@ string in the workflow file. For example:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v2.0.0-pre1
+        uses: mristin/opinionated-commit-message@v2
         with:
           additional-verbs: 'chrusimusi, unit-test'
 ```
@@ -111,14 +111,30 @@ as input:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v2.0.0-pre1
+        uses: mristin/opinionated-commit-message@v2
         with:
           path-to-additional-verbs: 'src/additional-verbs.txt'
 ```
 
+## One-liners
+
+Usually, you need to write elaborate commit messages with a shorter header
+and more verbose body for an informative Git history. However, this might be
+too rigid for certain projects.
+
+You can allow one-liner commit messages by setting the flag `allow-one-liners`:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v2
+        with:
+          allow-one-liners: 'true'
+```
+
 ## Local Usage
 
-We translated the opinionanted-commit-message to a powershell script so that
+We translated the opinionated-commit-message to a powershell script so that
 you can include it in your local pre-commit and pre-push checks.
 
 The script is available at: [`local/powershell/OpinionatedCommitMessage.ps1`](

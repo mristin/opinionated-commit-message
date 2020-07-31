@@ -560,9 +560,14 @@ function splitLines(message) {
 }
 function splitSubjectBody(lines) {
     const result = { errors: [] };
-    if (lines.length < 3) {
-        result.errors.push(`Expected at least three lines (subject, empty, body), ` +
+    if (lines.length === 0 || lines.length === 1) {
+        result.errors.push('Expected at least three lines (subject, empty, body), ' +
             `but got: ${lines.length}`);
+        return result;
+    }
+    else if (lines.length === 2) {
+        result.errors.push('Expected at least three lines (subject, empty, body) ' +
+            `in a multi-line message, but got: ${lines.length}`);
         return result;
     }
     if (lines[1].length !== 0) {
@@ -633,6 +638,11 @@ function checkBody(subject, bodyLines) {
     const errors = [];
     if (bodyLines.length === 0) {
         errors.push('At least one line is expected in the body, but got empty body.');
+        return errors;
+    }
+    if (bodyLines.length === 1 && bodyLines[0].trim() === '') {
+        errors.push('Unexpected empty body');
+        return errors;
     }
     for (const [i, line] of bodyLines.entries()) {
         if (line.length > 72) {
@@ -662,23 +672,32 @@ function checkBody(subject, bodyLines) {
 }
 const mergeMessageRe = new RegExp("^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
     'into [^\\000-\\037\\177 ~^:?*[]+$');
-function check(message, additionalVerbs) {
+function check(message, additionalVerbs, allowOneLiners) {
     const errors = [];
     if (mergeMessageRe.test(message)) {
         return errors;
     }
     const lines = splitLines(message);
-    const maybeSubjectBody = splitSubjectBody(lines);
-    if (maybeSubjectBody.errors.length > 0) {
-        errors.push(...maybeSubjectBody.errors);
+    if (lines.length === 0) {
+        errors.push(`The message is empty.`);
+        return errors;
+    }
+    else if (lines.length === 1 && allowOneLiners) {
+        errors.push(...checkSubject(lines[0], additionalVerbs));
     }
     else {
-        if (maybeSubjectBody.subjectBody === undefined) {
-            throw Error('Unexpected undefined subjectBody');
+        const maybeSubjectBody = splitSubjectBody(lines);
+        if (maybeSubjectBody.errors.length > 0) {
+            errors.push(...maybeSubjectBody.errors);
         }
-        const subjectBody = maybeSubjectBody.subjectBody;
-        errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
-        errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+        else {
+            if (maybeSubjectBody.subjectBody === undefined) {
+                throw Error('Unexpected undefined subjectBody');
+            }
+            const subjectBody = maybeSubjectBody.subjectBody;
+            errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
+            errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+        }
     }
     // Post-condition
     for (const error of errors) {
@@ -4523,10 +4542,24 @@ function runWithExceptions() {
             additionalVerbs.add(verb);
         }
     }
+    // Parse allow-one-liners input
+    const allowOneLinersText = core.getInput('allow-one-liners', {
+        required: false
+    });
+    const allowOneLiners = !allowOneLinersText
+        ? false
+        : input.parseAllowOneLiners(allowOneLinersText);
+    if (allowOneLiners === null) {
+        const error = 'Unexpected value for allow-one-liners. ' +
+            `Expected either 'true' or 'false', got: ${allowOneLinersText}`;
+        core.error(error);
+        core.setFailed(error);
+        return;
+    }
     // Parts of the error message to be concatenated with '\n'
     const parts = [];
     for (const [messageIndex, message] of messages.entries()) {
-        const errors = inspection.check(message, additionalVerbs);
+        const errors = inspection.check(message, additionalVerbs, allowOneLiners);
         if (errors.length > 0) {
             const repr = represent.formatErrors(message, messageIndex, errors);
             parts.push(repr);
@@ -9287,7 +9320,7 @@ function getNextPage (octokit, link, headers) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseVerbs = void 0;
+exports.parseAllowOneLiners = exports.parseVerbs = void 0;
 function parseVerbs(text) {
     const lines = text.split('\n');
     const verbs = [];
@@ -9301,6 +9334,16 @@ function parseVerbs(text) {
     return verbs;
 }
 exports.parseVerbs = parseVerbs;
+function parseAllowOneLiners(text) {
+    if (text === '' || text.toLowerCase() === 'false' || text === '0') {
+        return false;
+    }
+    if (text.toLowerCase() === 'true' || text === '1') {
+        return true;
+    }
+    return null;
+}
+exports.parseAllowOneLiners = parseAllowOneLiners;
 
 
 /***/ }),

@@ -16,3 +16,7 @@ inputs:
     description: 'Path to the file containing the additional verbs in imperative mood to be accepted in checks'
     required: false
     default: ''
+  allow-one-liners:
+    description: 'If set to "true", allows one-liner commit messages without body'
+    required: false
+    default: ''
