@@ -116,6 +116,32 @@ as input:
           path-to-additional-verbs: 'src/additional-verbs.txt'
 ```
 
+## Long URLs
+
+Splitting URLs on separate lines to satisfy the maximum character lenght 
+breaks the link functionality on most readers
+(*e.g.*, in a terminal or on Github). Therefore we need to tolerate long URLs
+in the message body. 
+
+Nevertheless, in order to make the text readable the URL should be put either on 
+a separate line or defined as a link in markdown. 
+
+For example, this is how you can write a message with an URL on a separate line:
+
+```
+Please see this page for more details:
+http://some-domain.com/very/long/long/long/long/long/long/long/long/long/path.html
+or read the manual.
+```
+
+Here is the same message with a link definition (arguably a bit more readable):
+
+```
+Please see [this page for more details][1] or read the manual.
+
+[1]: http://some-domain.com/very/long/long/long/long/long/long/long/long/long/path.html
+```
+
 ## One-liners
 
 Usually, you need to write elaborate commit messages with a shorter header

@@ -129,6 +129,9 @@ function checkSubject(subject: string, additionalVerbs: Set<string>): string[] {
   return errors;
 }
 
+const urlLineRe = new RegExp('^[^ ]+://[^ ]+$');
+const linkDefinitionRe = new RegExp('^\\[[^\\]]+]\\s*:\\s*[^ ]+://[^ ]+$');
+
 function checkBody(subject: string, bodyLines: string[]): string[] {
   const errors: string[] = [];
 
@@ -145,6 +148,10 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
   }
 
   for (const [i, line] of bodyLines.entries()) {
+    if (urlLineRe.test(line) || linkDefinitionRe.test(line)) {
+      continue;
+    }
+
     if (line.length > 72) {
       errors.push(
         `The line ${i + 3} of the message (line ${i + 1} of the body) ` +
