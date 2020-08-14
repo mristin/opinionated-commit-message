@@ -8755,7 +8755,13 @@ exports.SET = new Set([
     'in-line',
     'inline',
     'redo',
-    're-do'
+    're-do',
+    'consolidate',
+    'install',
+    'configure',
+    're-instate',
+    'reinstate',
+    'pin'
 ]);
 
 
