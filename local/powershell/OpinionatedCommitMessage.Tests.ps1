@@ -293,6 +293,51 @@ function TestFailWithAllowOneLiners
     return $true
 }
 
+function TestOKWithURLOnSeparateLine
+{
+    $url = ("http://mristin@some-domain.com/some/very/very/very/very/" +
+        "very/very/very/long/path/index.html")
+
+    $message = "Do something`n`nThis does something with URL:`n$url"
+    $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = "The message is OK.${nl}"
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestOKWithURLOnSeparateLine: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestOKWithURLOnSeparateLine: OK"
+    return $true
+}
+
+function TestOKWithLinkDefinition
+{
+    $url = ("http://mristin@some-domain.com/some/very/very/very/very/" +
+        "very/very/very/long/path/index.html")
+
+    $message = "Do something`n`nThis does something with URL: [1]`n`n[1]: $url"
+    $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = "The message is OK.${nl}"
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestOKWithLinkDefinition: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestOKWithLinkDefinition: OK"
+    return $true
+}
+
+
 function Main
 {
     Push-Location
@@ -313,8 +358,8 @@ function Main
         $success = TestOKPathToAdditionalVerbs -and $success
         $success = TestOKWithAllowOneLiners -and $success
         $success = TestFailWithAllowOneLiners -and $success
-
-        # TODO: TestFailAllowOneLiners
+        $success = TestOKWithURLOnSeparateLine -and $success
+        $success = TestOKWithLinkDefinition -and $success
 
         if(!$success)
         {

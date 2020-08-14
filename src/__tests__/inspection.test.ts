@@ -234,3 +234,76 @@ it('ignores merge messages.', () => {
   const errors = inspection.check(message, new Set<string>(), false);
   expect(errors).toEqual([]);
 });
+
+it('ignores URL on a separate line.', () => {
+  const url =
+    'http://mristin@some-domain.com/some/very/very/very/very/' +
+    'very/very/very/long/path/index.html';
+
+  const message = `Do something
+
+This patch does something with the URL:
+${url}
+The next line conforms to the line length.`;
+
+  const errors = inspection.check(message, new Set<string>(), false);
+  expect(errors).toEqual([]);
+});
+
+it('ignores URL on a separate line, but reports non-conform lines.', () => {
+  const long = 'long, long, long, long, long, long, long, long, long';
+  const url =
+    'http://mristin@some-domain.com/some/very/very/very/very/' +
+    'very/very/very/long/path/index.html';
+
+  const message = `Do something
+
+This ${long} patch does something with the URL.
+${url}`;
+
+  const errors = inspection.check(message, new Set<string>(), false);
+  expect(errors).toEqual([
+    'The line 3 of the message (line 1 of the body) exceeds ' +
+      'the limit of 72 characters. The line contains 92 characters: ' +
+      `"This ${long} patch does something with the URL.".`
+  ]);
+});
+
+it('ignores link definitions.', () => {
+  const url =
+    'http://mristin@some-domain.com/some/very/very/very/very/' +
+    'very/very/very/long/path/index.html';
+
+  const message = `Do something
+
+This patch does something with the URL: [1]
+
+[1]: ${url}
+
+The next line conforms to the line length.`;
+
+  const errors = inspection.check(message, new Set<string>(), false);
+  expect(errors).toEqual([]);
+});
+
+it('ignores link definitions, but reports non-conform lines.', () => {
+  const url =
+    'http://mristin@some-domain.com/some/very/very/very/very/' +
+    'very/very/very/long/path/index.html';
+  const long = 'long, long, long, long, long, long, long, long, long';
+
+  const message = `Do something
+
+This patch does something with the URL: [1]
+
+[1]: ${url}
+
+The ${long} line is too long.`;
+
+  const errors = inspection.check(message, new Set<string>(), false);
+  expect(errors).toEqual([
+    'The line 7 of the message (line 5 of the body) exceeds ' +
+      'the limit of 72 characters. The line contains 74 characters: ' +
+      `"The ${long} line is too long.".`
+  ]);
+});

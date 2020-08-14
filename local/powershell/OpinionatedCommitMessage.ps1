@@ -870,6 +870,9 @@ function CheckSubject([string]$subject, [hashtable]$verbs)
     return $errors
 }
 
+$urlLineRe = [Regex]::new('^[^ ]+://[^ ]+$')
+$linkDefinitionRe = [Regex]::new('^\[[^\]]+]\s*:\s*[^ ]+://[^ ]+$')
+
 function CheckBody([string]$subject, [string[]] $bodyLines)
 {
     $errors = @()
@@ -889,6 +892,12 @@ function CheckBody([string]$subject, [string[]] $bodyLines)
     for($i = 0; $i -lt $bodyLines.Count; $i++)
     {
         $line = $bodyLines[$i]
+
+        if ($urlLineRe.IsMatch($line) -or $linkDefinitionRe.IsMatch($line))
+        {
+            continue;
+        }
+
         if($line.Length -gt 72)
         {
             $errors += "The line $($i + 3) of the message (line $($i + 1) of the body) " + `
