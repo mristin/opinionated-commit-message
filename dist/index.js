@@ -634,6 +634,8 @@ function checkSubject(subject, additionalVerbs) {
     }
     return errors;
 }
+const urlLineRe = new RegExp('^[^ ]+://[^ ]+$');
+const linkDefinitionRe = new RegExp('^\\[[^\\]]+]\\s*:\\s*[^ ]+://[^ ]+$');
 function checkBody(subject, bodyLines) {
     const errors = [];
     if (bodyLines.length === 0) {
@@ -645,6 +647,9 @@ function checkBody(subject, bodyLines) {
         return errors;
     }
     for (const [i, line] of bodyLines.entries()) {
+        if (urlLineRe.test(line) || linkDefinitionRe.test(line)) {
+            continue;
+        }
         if (line.length > 72) {
             errors.push(`The line ${i + 3} of the message (line ${i + 1} of the body) ` +
                 'exceeds the limit of 72 characters. ' +
