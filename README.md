@@ -7,7 +7,7 @@ https://img.shields.io/github/v/release/mristin/opinionated-commit-message?style
 https://github.com/mristin/opinionated-commit-message/workflows/build-and-test/badge.svg?branch=master
 )
 
-Opinionated-commit-message is a Github Action which checks commit messages 
+Opinionated-commit-message is a GitHub Action which checks commit messages 
 according to an opinionated style.
 
 The style was inspired by https://chris.beams.io/posts/git-commit/:
@@ -42,9 +42,9 @@ thank the author for the great work!
 
 ## Example Workflow
 
-You can set up a Github workflow to automatically check messages. 
+You can set up a GitHub workflow to automatically check messages. 
 Put the following file in `.github/workflows/check-commit-message.yml` and 
-Github should pick it and set it up.
+GitHub should pick it and set it up.
 
 ```yml
 name: 'Check commit message style'
@@ -71,7 +71,7 @@ jobs:
 
 ## Checked Events
 
-Opinionated-commit-message verifies commit messages on the Github events
+Opinionated-commit-message verifies commit messages on the GitHub events
 [`pull_request`](
 https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request
 ) and [`push`](
@@ -120,7 +120,7 @@ as input:
 
 Splitting URLs on separate lines to satisfy the maximum character lenght 
 breaks the link functionality on most readers
-(*e.g.*, in a terminal or on Github). Therefore we need to tolerate long URLs
+(*e.g.*, in a terminal or on GitHub). Therefore we need to tolerate long URLs
 in the message body. 
 
 Nevertheless, in order to make the text readable the URL should be put either on 
@@ -173,7 +173,7 @@ to be installed.
 ## Known Issue
 
 Commit messages of the pull request are not verified unless you trigger the 
-workflow on the push as well. Github does not include the content of commit 
+workflow on the push as well. GitHub does not include the content of commit 
 messages in the context payload, so checking all the commit messages of 
 the pull request would involve various API call and additional complexity.
 

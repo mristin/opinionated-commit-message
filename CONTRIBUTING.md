@@ -35,6 +35,6 @@ from https://chris.beams.io/posts/git-commit:
 * Use the body to explain *what* and *why* (instead of *how*)
 
 If you would like to contribute in code, please fork the repository and create
-the feature branch in your forked repository. See [this Github tuturial](
+the feature branch in your forked repository. See [this GitHub tuturial](
 https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork
 ) for more guidance. 

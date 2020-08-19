@@ -31,7 +31,7 @@ param(
 This script checks commit messages according to an opinionated style.
 
 .DESCRIPTION
-Opinionated-commit-message is a Github Action which checks commit messages according to an opinionated style.
+Opinionated-commit-message is a GitHub Action which checks commit messages according to an opinionated style.
 This script is a rewrite in Powershell meant for local usage.
 
 The style was inspired by https://chris.beams.io/posts/git-commit/:
