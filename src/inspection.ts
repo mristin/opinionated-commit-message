@@ -69,7 +69,7 @@ function checkSubject(subject: string, additionalVerbs: Set<string>): string[] {
   const errors: string[] = [];
 
   // Tolerate the hash code referring, e.g., to a pull request.
-  // These hash codes are usually added automatically by Github and
+  // These hash codes are usually added automatically by GitHub and
   // similar services.
   const subjectWoCode = subject.replace(suffixHashCodeRe, '');
 
