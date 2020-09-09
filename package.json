@@ -1,6 +1,6 @@
 {
   "name": "@mristin/opinionated-commit-message",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "GitHub Action to check commit messages according to an opinionated style",
   "keywords": [
     "github",
