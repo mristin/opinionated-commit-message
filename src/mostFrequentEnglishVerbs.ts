@@ -731,5 +731,7 @@ export const SET = new Set([
   'configure',
   're-instate',
   'reinstate',
-  'pin'
+  'pin',
+  'hint',
+  'integrate'
 ]);
