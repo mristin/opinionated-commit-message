@@ -733,5 +733,6 @@ export const SET = new Set([
   'reinstate',
   'pin',
   'hint',
-  'integrate'
+  'integrate',
+  'instruct'
 ]);

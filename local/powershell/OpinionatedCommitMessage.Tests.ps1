@@ -30,13 +30,62 @@ function TestFailTooFewLines
     Write-Host "TestFailTooFewLines: OK"
 }
 
-function TestFailSubjectWithNonVerb
+function TestFailSubjectWithNonWord
 {
-    $message = "ABC does something`n`nThis patch does something."
+    $message = "ABC15 does something`n`nThis patch does something."
     $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
 
     $nl = [Environment]::NewLine
-    $expected = "* The subject must start with a capitalized verb (e.g., `"Change`").${nl}"
+    $expected = (
+        "* Expected the subject to start with a verb in imperative mood consisting " +
+        "of letters and possibly dashes in-between, but the subject was: `"ABC15 does something`". " +
+        "Please re-write the subject so that it starts with a verb in imperative mood.${nl}"
+    )
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestFailSubjectWithNonWord: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestFailSubjectWithNonWord: OK"
+    return $true
+}
+
+function TestFailSubjectWithNonCapitalized
+{
+    $message = "do something`n`nThis patch does something."
+    $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = (
+        "* The subject must start with a capitalized word, but the current first word is: `"do`". " +
+        "Please capitalize to: `"Do`".${nl}"
+    )
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestFailSubjectWithNonCapitalized: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestFailSubjectWithNonCapitalized: OK"
+    return $true
+}
+
+function TestFailSubjectWithNonVerb
+{
+    $message = "Abc does something`n`nThis patch does something."
+    $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = (
+        "* The subject must start with a verb in imperative mood (according to a whitelist), " +
+        "but got: `"Abc`"; if this is a false positive, consider adding the verb to -additionalVerbs or " +
+        "to the file referenced by -pathToAdditionalVerbs.${nl}"
+    )
 
     if ($got -ne $expected)
     {
@@ -55,7 +104,7 @@ function TestFailSubjectWithTrailingDot
     $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
 
     $nl = [Environment]::NewLine
-    $expected = "* The subject must not end with a dot ('.').${nl}"
+    $expected = "* The subject must not end with a dot ('.'). Please remove the trailing dot(s).${nl}"
 
     if ($got -ne $expected)
     {
@@ -74,9 +123,17 @@ function TestFailSubjectTooLong
     $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
 
     $nl = [Environment]::NewLine
-    $expected = "* The subject exceeds the limit of 50 characters " + `
-        "(got: 51): `"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`"${nl}" + `
-        "* The subject must start with a capitalized verb (e.g., `"Change`").${nl}"
+    $expected = (
+        "* The subject exceeds the limit of 50 characters " +
+        "(got: 51): `"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`". " +
+        "Please shorten the subject to make it more succinct.${nl}" +
+        "* The subject must start with a capitalized word, but " +
+        "the current first word is: `"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`". " +
+        "Please capitalize to: `"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`".${nl}" +
+        "* The subject must start with a verb in imperative mood (according to a whitelist), " +
+        "but got: `"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`"; if this is a false positive, " +
+        "consider adding the verb to -additionalVerbs or to the file referenced by -pathToAdditionalVerbs.${nl}"
+    )
 
     if ($got -ne $expected)
     {
@@ -96,8 +153,11 @@ function TestFailBodyTooLong
     $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
 
     $nl = [Environment]::NewLine
-    $expected = "* The line 3 of the message (line 1 of the body) exceeds the limit of 72 characters. " + `
-        "The line contains 73 characters: `"${bodyLine}`".${nl}"
+    $expected = (
+        "* The line 3 of the message (line 1 of the body) exceeds the limit of 72 characters. " +
+        "The line contains 73 characters: `"${bodyLine}`". " +
+        "Please reformat the body so that all the lines fit 72 characters.${nl}"
+    )
 
     if ($got -ne $expected)
     {
@@ -116,7 +176,12 @@ function TestFailIdenticalFirstWordInBodyAndSubject
     $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
 
     $nl = [Environment]::NewLine
-    $expected = "* The first word of the subject (`"Do`") must not match the first word of the body.${nl}"
+    $expected = (
+        "* The first word of the subject (`"Do`") must not match the first word of the body. " +
+        "Please make the body more informative by adding more information instead of repeating " +
+        "the subject. For example, start by explaining the problem that this change is " +
+        'intendended to solve or what was previously missing (e.g., "Previously, ....").' + $nl
+    )
 
     if ($got -ne $expected)
     {
@@ -280,7 +345,7 @@ function TestFailWithAllowOneLiners
     )|Out-String
 
     $nl = [Environment]::NewLine
-    $expected = "* The subject must not end with a dot ('.').${nl}"
+    $expected = "* The subject must not end with a dot ('.'). Please remove the trailing dot(s).${nl}"
 
     if ($got -ne $expected)
     {
@@ -345,7 +410,10 @@ function Main
 
     try
     {
-        $success = TestFailTooFewLines
+        $success = $true
+        $success = TestFailTooFewLines -and $success
+        $success = TestFailSubjectWithNonWord -and $success
+        $success = TestFailSubjectWithNonCapitalized -and $success
         $success = TestFailSubjectWithNonVerb -and $success
         $success = TestFailSubjectWithTrailingDot -and $success
         $success = TestFailSubjectTooLong -and $success
