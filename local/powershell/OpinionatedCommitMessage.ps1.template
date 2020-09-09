@@ -77,8 +77,46 @@ function ParseAdditionalVerbs($text)
     return $verbs
 }
 
-$capitalizedWordRe = [Regex]::new('^([A-Z][a-z]*)[^a-zA-Z]')
+$allLettersRe = [Regex]::new('^[a-zA-Z][a-zA-Z-]+$')
+$firstWordBeforeSpaceRe = [Regex]::new('^([a-zA-Z][a-zA-Z-]+)\s');
 $suffixHashCodeRe = [Regex]::new('\s?\(\s*#[a-zA-Z_0-9]+\s*\)$')
+
+function ExtractFirstWord([string]$Text)
+{
+    if ($Text.Length -eq 0)
+    {
+        return $null
+    }
+
+    if ($allLettersRe.IsMatch($Text))
+    {
+        return $Text
+    }
+
+    $matches = $firstWordBeforeSpaceRe.Match($Text)
+    if (!$matches.Success)
+    {
+        return $null
+    }
+
+    $firstWord = $matches[0].Groups[1].Value
+    return $firstWord
+}
+
+function Capitalize([string]$word)
+{
+    if ($word.Length -eq 0)
+    {
+        return ""
+    }
+
+    if ($word.Length -eq 1)
+    {
+        return $word.ToUpperInvariant()
+    }
+
+    return $word.Substring(0, 1).ToUpperInvariant() + $word.Substring(1).ToLowerInvariant()
+}
 
 function CheckSubject([string]$subject, [hashtable]$verbs)
 {
@@ -102,31 +140,47 @@ function CheckSubject([string]$subject, [hashtable]$verbs)
     if ($subjectWoCode.Length -gt 50)
     {
         $errors += "The subject exceeds the limit of 50 characters " +    `
-              "(got: $( $subjectWoCode.Length )): $( $subjectWoCode|ConvertTo-Json )"
+              "(got: $( $subjectWoCode.Length )): $( $subjectWoCode|ConvertTo-Json ). " +
+              "Please shorten the subject to make it more succinct."  
     }
 
-    $matches = $capitalizedWordRe.Matches($subjectWoCode)
-    if ($matches.Count -ne 1)
+    $firstWord = ExtractFirstWord -Text $subjectWoCode
+    if ($null -eq $firstWord)
     {
-        $errors += 'The subject must start with a capitalized verb (e.g., "Change").'
-    }
-    else
-    {
-        $match = $matches[0]
-        $word = $match.Groups[1].Value
-        $wordLower = $word.ToLower()
+        $errors += (
+            "Expected the subject to start with a verb in imperative mood " +
+            "consisting of letters and possibly dashes in-between, " +
+            "but the subject was: $($subjectWoCode|ConvertTo-Json). " +
+            "Please re-write the subject so that it starts with " +
+            "a verb in imperative mood."
+        )
+    } else {
+        $capitalized = Capitalize -Word $firstWord
+        if ($capitalized -cne $firstWord)
+        {
+            $errors += (
+                "The subject must start with a capitalized word, " +
+                "but the current first word is: $( $firstWord|ConvertTo-Json ). " +
+                "Please capitalize to: $( $capitalized|ConvertTo-Json )."
+            )
+        }
 
-        if (!$verbs.Contains($wordLower) -or ($false -eq $verbs[$wordLower]))
+        $firstWordLower = $firstWord.ToLower()
+
+        if (!$verbs.Contains($firstWordLower) -or ($false -eq $verbs[$firstWordLower]))
         {
             $errors += "The subject must start with a verb in imperative mood (according to a whitelist), " +   `
-                  "but got: $($word|ConvertTo-Json); if this is a false positive, consider adding the verb " + `
+                  "but got: $($firstWord|ConvertTo-Json); if this is a false positive, consider adding the verb " + `
                   "to -additionalVerbs or to the file referenced by -pathToAdditionalVerbs."
         }
     }
 
     if ( $subjectWoCode.EndsWith("."))
     {
-        $errors += "The subject must not end with a dot ('.')."
+        $errors += (
+            "The subject must not end with a dot ('.'). " +
+            "Please remove the trailing dot(s)."
+        )
     }
 
     return $errors
@@ -162,26 +216,30 @@ function CheckBody([string]$subject, [string[]] $bodyLines)
 
         if($line.Length -gt 72)
         {
-            $errors += "The line $($i + 3) of the message (line $($i + 1) of the body) " + `
-                "exceeds the limit of 72 characters. The line contains $($line.Length) characters: " + `
-                "$($line|ConvertTo-Json)."
+            $errors += (
+                "The line $($i + 3) of the message (line $($i + 1) of the body) " +
+                "exceeds the limit of 72 characters. The line contains $($line.Length) characters: " +
+                "$($line|ConvertTo-Json). " +
+                "Please reformat the body so that all the lines fit 72 characters."
+            )
         }
     }
 
-    $bodyFirstWordMatches = $capitalizedWordRe.Matches($bodyLines[0])
-    if($bodyFirstWordMatches.Count -eq 1)
+    $bodyFirstWord = ExtractFirstWord -Text $bodyLines[0]
+    if($null -ne $bodyFirstWord)
     {
-        $bodyFirstWord = $bodyFirstWordMatches[0].Groups[1].Value
-
-        $subjectFirstWordMatches = $capitalizedWordRe.Matches($subject)
-        if($subjectFirstWordMatches.Count -eq 1)
+        $subjectFirstWord = ExtractFirstWord -Text $subject
+        if($null -ne $subjectFirstWord)
         {
-            $subjectFirstWord = $subjectFirstWordMatches[0].Groups[1].Value
-
             if($subjectFirstWord.ToLower() -eq $bodyFirstWord.ToLower())
             {
-                $errors += "The first word of the subject ($($subjectFirstWord|ConvertTo-Json)) must not match " + `
-                    "the first word of the body."
+                $errors += (
+                    "The first word of the subject ($($subjectFirstWord|ConvertTo-Json)) must not match " +
+                    "the first word of the body. " +
+                    "Please make the body more informative by adding more information instead of repeating " +
+                    "the subject. For example, start by explaining the problem that this change is " +
+                    'intendended to solve or what was previously missing (e.g., "Previously, ....").'
+                )
             }
         }
     }

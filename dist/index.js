@@ -577,11 +577,72 @@ function splitSubjectBody(lines) {
     result.subjectBody = { subject: lines[0], bodyLines: lines.slice(2) };
     return result;
 }
-const capitalizedWordRe = new RegExp('^([A-Z][a-z]*)[^a-zA-Z]');
+const allLettersRe = new RegExp('^[a-zA-Z][a-zA-Z-]+$');
+const firstWordBeforeSpaceRe = new RegExp('^([a-zA-Z][a-zA-Z-]+)\\s');
 const suffixHashCodeRe = new RegExp('\\s?\\(\\s*#[a-zA-Z_0-9]+\\s*\\)$');
-function checkSubject(subject, additionalVerbs) {
+function extractFirstWord(text) {
+    if (text.length === 0) {
+        return null;
+    }
+    if (text.match(allLettersRe)) {
+        return text;
+    }
+    else {
+        const match = firstWordBeforeSpaceRe.exec(text);
+        if (!match) {
+            return null;
+        }
+        return match[1];
+    }
+}
+function capitalize(word) {
+    if (word.length === 0) {
+        return '';
+    }
+    else if (word.length === 1) {
+        return word.toUpperCase();
+    }
+    else {
+        return word[0].toUpperCase() + word.slice(1).toLowerCase();
+    }
+}
+function errorMessageOnNonVerb(firstWord, inputs) {
+    const parts = [
+        'The subject must start with a verb in imperative mood, ' +
+            `but it started with: ${JSON.stringify(firstWord)}. ` +
+            'Whether the word is in imperative mood is determined by ' +
+            'whitelisting. The general whitelist is available at ' +
+            'https://github.com/mristin/opinionated-commit-message/' +
+            'blob/master/src/mostFrequentEnglishVerbs.ts.'
+    ];
+    if (!inputs.hasAdditionalVerbsInput) {
+        parts.push('You can whitelist additional verbs using ' +
+            '"additional-verbs" input to your GitHub action ' +
+            '(currently no additional verbs were thus specified).');
+    }
+    else {
+        parts.push('You can whitelist additional verbs using ' +
+            '"additional-verbs" input to your GitHub action ' +
+            `(currently one or more additional verbs were thus ` +
+            'specified).');
+    }
+    if (inputs.pathToAdditionalVerbs.length === 0) {
+        parts.push('Moreover, you can also whitelist additional verbs in a file ' +
+            'given as "path-to-additional-verbs" input to your GitHub action ' +
+            '(currently no whitelist file was specified).');
+    }
+    else {
+        parts.push('Moreover, you can also whitelist additional verbs in a file ' +
+            'given as "path-to-additional-verbs" input to your GitHub action ' +
+            `(currently the file is: ${inputs.pathToAdditionalVerbs}).`);
+    }
+    parts.push('Please check the whitelist and either change the first word ' +
+        'of the subject or whitelist the verb.');
+    return parts.join(' ');
+}
+function checkSubject(subject, inputs) {
     // Pre-condition
-    for (const verb of additionalVerbs) {
+    for (const verb of inputs.additionalVerbs) {
         if (verb.length === 0) {
             throw new Error(`Unexpected empty additional verb`);
         }
@@ -591,46 +652,46 @@ function checkSubject(subject, additionalVerbs) {
     }
     const errors = [];
     // Tolerate the hash code referring, e.g., to a pull request.
-    // These hash codes are usually added automatically by Github and
+    // These hash codes are usually added automatically by GitHub and
     // similar services.
     const subjectWoCode = subject.replace(suffixHashCodeRe, '');
     if (subjectWoCode.length > 50) {
         errors.push(`The subject exceeds the limit of 50 characters ` +
-            `(got: ${subject.length}, JSONified: ${JSON.stringify(subjectWoCode)})`);
+            `(got: ${subject.length}, JSON: ${JSON.stringify(subjectWoCode)}).` +
+            'Please shorten the subject to make it more succinct.');
     }
-    const match = capitalizedWordRe.exec(subjectWoCode);
-    if (!match) {
-        errors.push('The subject must start with a capitalized verb (e.g., "Change").');
+    const firstWord = extractFirstWord(subjectWoCode);
+    if (!firstWord) {
+        errors.push('Expected the subject to start with a verb in imperative mood ' +
+            'consisting of letters and possibly dashes in-between, ' +
+            `but the subject was: ${JSON.stringify(subjectWoCode)}. ` +
+            'Please re-write the subject so that it starts with ' +
+            'a verb in imperative mood.');
     }
     else {
-        if (match.length < 2) {
-            throw Error('Expected at least one group to match the first capitalized word, ' +
-                'but got none.');
+        const capitalized = capitalize(firstWord);
+        if (firstWord !== capitalized) {
+            errors.push('The subject must start with a capitalized word, ' +
+                `but the current first word is: ${JSON.stringify(firstWord)}. ` +
+                `Please capitalize to: ${JSON.stringify(capitalized)}.`);
         }
-        const word = match[1];
-        if (!mostFrequentEnglishVerbs.SET.has(word.toLowerCase()) &&
-            !additionalVerbs.has(word.toLowerCase())) {
-            if (additionalVerbs.size === 0) {
-                errors.push('The subject must start in imperative mood with one of the ' +
-                    `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
-                    'Please see ' +
-                    'https://github.com/mristin/opinionated-commit-message/blob/master/' +
-                    'src/mostFrequentEnglishVerbs.ts ' +
-                    'for a complete list.');
-            }
-            else {
-                errors.push('The subject must start in imperative mood with one of the ' +
-                    `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
-                    'Please see ' +
-                    'https://github.com/mristin/opinionated-commit-message/blob/master/' +
-                    'src/mostFrequentEnglishVerbs.ts ' +
-                    'for a complete list and ' +
-                    'also revisit your list of additional verbs.');
-            }
+        if (!mostFrequentEnglishVerbs.SET.has(firstWord.toLowerCase()) &&
+            !inputs.additionalVerbs.has(firstWord.toLowerCase())) {
+            /*
+             (mristin, 2020-09-09): It might be worthwhile to refactor the rendering
+             of the error messages to a separate module and use classes to represent
+             the errors. The complexity is still manageable, so it is not yet the
+             moment to do so since the refactoring would be quite time-consuming.
+      
+             Originally, I did not foresee that error messages need such a large
+             information content.
+             */
+            errors.push(errorMessageOnNonVerb(firstWord, inputs));
         }
     }
     if (subjectWoCode.endsWith('.')) {
-        errors.push("The subject must not end with a dot ('.').");
+        errors.push("The subject must not end with a dot ('.'). " +
+            'Please remove the trailing dot(s).');
     }
     return errors;
 }
@@ -654,22 +715,24 @@ function checkBody(subject, bodyLines) {
             errors.push(`The line ${i + 3} of the message (line ${i + 1} of the body) ` +
                 'exceeds the limit of 72 characters. ' +
                 `The line contains ${line.length} characters: ` +
-                `${JSON.stringify(line)}.`);
+                `${JSON.stringify(line)}. ` +
+                'Please reformat the body so that all the lines fit ' +
+                '72 characters.');
         }
     }
-    const bodyFirstWordMatch = capitalizedWordRe.exec(bodyLines[0]);
-    if (bodyFirstWordMatch) {
-        const bodyFirstWord = bodyFirstWordMatch[1];
-        const subjectFirstWordMatch = capitalizedWordRe.exec(subject);
-        if (subjectFirstWordMatch !== undefined &&
-            subjectFirstWordMatch !== null &&
-            subjectFirstWordMatch.length > 0) {
-            const subjectFirstWord = subjectFirstWordMatch[1];
+    const bodyFirstWord = extractFirstWord(bodyLines[0]);
+    if (bodyFirstWord) {
+        const subjectFirstWord = extractFirstWord(subject);
+        if (subjectFirstWord) {
             if (subjectFirstWord.toLowerCase() === bodyFirstWord.toLowerCase()) {
                 errors.push('The first word of the subject ' +
                     `(${JSON.stringify(subjectFirstWord)}) ` +
-                    'must not match ' +
-                    'the first word of the body.');
+                    'must not match the first word of the body. ' +
+                    'Please make the body more informative by adding more ' +
+                    'information instead of repeating the subject. ' +
+                    'For example, start by explaining the problem that this change ' +
+                    'is intended to solve or what was previously missing ' +
+                    '(e.g., "Previously, ....").');
             }
         }
     }
@@ -677,7 +740,7 @@ function checkBody(subject, bodyLines) {
 }
 const mergeMessageRe = new RegExp("^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
     'into [^\\000-\\037\\177 ~^:?*[]+$');
-function check(message, additionalVerbs, allowOneLiners) {
+function check(message, inputs) {
     const errors = [];
     if (mergeMessageRe.test(message)) {
         return errors;
@@ -687,8 +750,8 @@ function check(message, additionalVerbs, allowOneLiners) {
         errors.push(`The message is empty.`);
         return errors;
     }
-    else if (lines.length === 1 && allowOneLiners) {
-        errors.push(...checkSubject(lines[0], additionalVerbs));
+    else if (lines.length === 1 && inputs.allowOneLiners) {
+        errors.push(...checkSubject(lines[0], inputs));
     }
     else {
         const maybeSubjectBody = splitSubjectBody(lines);
@@ -700,7 +763,7 @@ function check(message, additionalVerbs, allowOneLiners) {
                 throw Error('Unexpected undefined subjectBody');
             }
             const subjectBody = maybeSubjectBody.subjectBody;
-            errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
+            errors.push(...checkSubject(subjectBody.subject, inputs));
             errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
         }
     }
@@ -4507,64 +4570,36 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.run = void 0;
-const fs_1 = __importDefault(__webpack_require__(747));
 const core = __importStar(__webpack_require__(470));
 const commitMessages = __importStar(__webpack_require__(281));
 const inspection = __importStar(__webpack_require__(117));
 const represent = __importStar(__webpack_require__(110));
 const input = __importStar(__webpack_require__(553));
 function runWithExceptions() {
+    var _a, _b, _c;
     const messages = commitMessages.retrieve();
-    const additionalVerbs = new Set();
-    // Parse additional-verbs input
-    const additionalVerbsInput = core.getInput('additional-verbs', {
-        required: false
-    });
-    if (additionalVerbsInput) {
-        for (const verb of input.parseVerbs(additionalVerbsInput)) {
-            additionalVerbs.add(verb);
-        }
-    }
-    // Parse additional-verbs-from-path input
-    const pathToAdditionalVerbs = core.getInput('path-to-additional-verbs', {
-        required: false
-    });
-    if (pathToAdditionalVerbs) {
-        if (!fs_1.default.existsSync(pathToAdditionalVerbs)) {
-            const error = 'The file referenced by path-to-additional-verbs could ' +
-                `not be found: ${pathToAdditionalVerbs}`;
-            core.error(error);
-            core.setFailed(error);
-            return;
-        }
-        const text = fs_1.default.readFileSync(pathToAdditionalVerbs).toString('utf-8');
-        for (const verb of input.parseVerbs(text)) {
-            additionalVerbs.add(verb);
-        }
-    }
-    // Parse allow-one-liners input
-    const allowOneLinersText = core.getInput('allow-one-liners', {
-        required: false
-    });
-    const allowOneLiners = !allowOneLinersText
-        ? false
-        : input.parseAllowOneLiners(allowOneLinersText);
-    if (allowOneLiners === null) {
-        const error = 'Unexpected value for allow-one-liners. ' +
-            `Expected either 'true' or 'false', got: ${allowOneLinersText}`;
-        core.error(error);
-        core.setFailed(error);
+    ////
+    // Parse inputs
+    ////
+    const additionalVerbsInput = (_a = core.getInput('additional-verbs', { required: false })) !== null && _a !== void 0 ? _a : '';
+    const pathToAdditionalVerbsInput = (_b = core.getInput('path-to-additional-verbs', { required: false })) !== null && _b !== void 0 ? _b : '';
+    const allowOneLinersInput = (_c = core.getInput('allow-one-liners', { required: false })) !== null && _c !== void 0 ? _c : '';
+    const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput);
+    if (maybeInputs.error !== null) {
+        core.error(maybeInputs.error);
+        core.setFailed(maybeInputs.error);
         return;
     }
+    const inputs = maybeInputs.mustInputs();
+    ////
+    // Inspect
+    ////
     // Parts of the error message to be concatenated with '\n'
     const parts = [];
     for (const [messageIndex, message] of messages.entries()) {
-        const errors = inspection.check(message, additionalVerbs, allowOneLiners);
+        const errors = inspection.check(message, inputs);
         if (errors.length > 0) {
             const repr = represent.formatErrors(message, messageIndex, errors);
             parts.push(repr);
@@ -8766,7 +8801,10 @@ exports.SET = new Set([
     'configure',
     're-instate',
     'reinstate',
-    'pin'
+    'pin',
+    'hint',
+    'integrate',
+    'instruct'
 ]);
 
 
@@ -9326,12 +9364,73 @@ function getNextPage (octokit, link, headers) {
 /***/ }),
 
 /***/ 553:
-/***/ (function(__unusedmodule, exports) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseAllowOneLiners = exports.parseVerbs = void 0;
+exports.parseAllowOneLiners = exports.parseVerbs = exports.parseInputs = exports.MaybeInputs = exports.Inputs = void 0;
+const fs_1 = __importDefault(__webpack_require__(747));
+class Inputs {
+    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs) {
+        this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
+        this.pathToAdditionalVerbs = pathToAdditionalVerbs;
+        this.allowOneLiners = allowOneLiners;
+        this.additionalVerbs = additionalVerbs;
+    }
+}
+exports.Inputs = Inputs;
+class MaybeInputs {
+    constructor(inputs, error) {
+        if (inputs === null && error === null) {
+            throw Error("Unexpected both 'inputs' and 'error' arguments to be null.");
+        }
+        if (inputs !== null && error !== null) {
+            throw Error("Unexpected both 'inputs' and 'error' arguments to be given.");
+        }
+        this.inputs = inputs;
+        this.error = error;
+    }
+    mustInputs() {
+        if (this.inputs === null) {
+            throw Error("The field 'inputs' is expected to be set, but it is null. " +
+                `The field 'error' is: ${this.error}`);
+        }
+        return this.inputs;
+    }
+}
+exports.MaybeInputs = MaybeInputs;
+function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput) {
+    const additionalVerbs = new Set();
+    const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
+    if (additionalVerbsInput) {
+        for (const verb of parseVerbs(additionalVerbsInput)) {
+            additionalVerbs.add(verb);
+        }
+    }
+    if (pathToAdditionalVerbsInput) {
+        if (!fs_1.default.existsSync(pathToAdditionalVerbsInput)) {
+            return new MaybeInputs(null, 'The file referenced by path-to-additional-verbs could ' +
+                `not be found: ${pathToAdditionalVerbsInput}`);
+        }
+        const text = fs_1.default.readFileSync(pathToAdditionalVerbsInput).toString('utf-8');
+        for (const verb of parseVerbs(text)) {
+            additionalVerbs.add(verb);
+        }
+    }
+    const allowOneLiners = !allowOneLinersInput
+        ? false
+        : parseAllowOneLiners(allowOneLinersInput);
+    if (allowOneLiners === null) {
+        return new MaybeInputs(null, 'Unexpected value for allow-one-liners. ' +
+            `Expected either 'true' or 'false', got: ${allowOneLinersInput}`);
+    }
+    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs), null);
+}
+exports.parseInputs = parseInputs;
 function parseVerbs(text) {
     const lines = text.split('\n');
     const verbs = [];

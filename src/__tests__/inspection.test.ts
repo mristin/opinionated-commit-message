@@ -1,4 +1,7 @@
+import * as input from '../input';
 import * as inspection from '../inspection';
+
+const defaultInputs: input.Inputs = input.parseInputs('', '', '').mustInputs();
 
 it('reports no errors on correct multi-line message.', () => {
   const message =
@@ -7,7 +10,7 @@ it('reports no errors on correct multi-line message.', () => {
     'This replaces the SomeClass with OtherClass in all of the module \n' +
     'since Some class was deprecated.';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
@@ -18,14 +21,16 @@ it('reports no errors on OK multi-line message with allowed one-liners.', () => 
     'This replaces the SomeClass with OtherClass in all of the module \n' +
     'since Some class was deprecated.';
 
-  const errors = inspection.check(message, new Set<string>(), true);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
 it('reports no errors on OK single-line message with allowed one-liners.', () => {
+  const inputs = input.parseInputs('', '', 'true').mustInputs();
+
   const message = 'Change SomeClass to OtherClass';
 
-  const errors = inspection.check(message, new Set<string>(), true);
+  const errors = inspection.check(message, inputs);
   expect(errors).toEqual([]);
 });
 
@@ -36,13 +41,13 @@ it('tolerates hash code in the subject.', () => {
     'The license files naming was inconsistent (`LICENSE.TXT` and \n' +
     '`LICENSE.txt`). This makes them all uniform (`LICENSE.txt`).';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
 it('reports too few lines with disallowed one-liners.', () => {
   const message = 'Change SomeClass to OtherClass';
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     'Expected at least three lines (subject, empty, body), but got: 1'
   ]);
@@ -50,13 +55,15 @@ it('reports too few lines with disallowed one-liners.', () => {
 
 it('reports missing body with disallowed one-liners.', () => {
   const message = 'Change SomeClass to OtherClass\n\n';
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual(['Unexpected empty body']);
 });
 
 it('reports missing body with allowed one-liners.', () => {
+  const inputs = input.parseInputs('', '', 'true').mustInputs();
+
   const message = 'Change SomeClass to OtherClass\n';
-  const errors = inspection.check(message, new Set<string>(), true);
+  const errors = inspection.check(message, inputs);
   expect(errors).toEqual([
     'Expected at least three lines (subject, empty, body) ' +
       'in a multi-line message, but got: 2'
@@ -70,23 +77,38 @@ it('reports on missing empty line between subject and body.', () => {
     'This replaces the SomeClass with OtherClass in all of the module \n' +
     'since Some class was deprecated.';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     'Expected an empty line between the subject and the body, ' +
       'but got a second line of length: 3'
   ]);
 });
 
+it('reports the subject starting with a non-word.', () => {
+  const message = 'ABC12\n\nThis does something.';
+
+  const errors = inspection.check(message, defaultInputs);
+  expect(errors).toEqual([
+    'Expected the subject to start with a verb in imperative mood ' +
+      'consisting of letters and possibly dashes in-between, ' +
+      'but the subject was: "ABC12". ' +
+      'Please re-write the subject so that it starts ' +
+      'with a verb in imperative mood.'
+  ]);
+});
+
 it('reports the subject starting with a non-capitalized word.', () => {
   const message =
-    'SomeClass to OtherClass\n' +
+    'change SomeClass to OtherClass\n' +
     '\n' +
     'This replaces the SomeClass with OtherClass in all of the module \n' +
     'since Some class was deprecated.';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
-    'The subject must start with a capitalized verb (e.g., "Change").'
+    'The subject must start with a capitalized word, ' +
+      'but the current first word is: "change". ' +
+      'Please capitalize to: "Change".'
   ]);
 });
 
@@ -100,39 +122,102 @@ it(
       'This replaces the SomeClass with OtherClass in all of the module \n' +
       'since Some class was deprecated.';
 
-    const errors = inspection.check(message, new Set<string>(), false);
+    const errors = inspection.check(message, defaultInputs);
     expect(errors.length).toBe(1);
-    expect(errors[0].startsWith('The subject must start in imperative mood'));
+    expect(errors).toEqual([
+      'The subject must start with a verb in imperative mood, ' +
+        'but it started with: "Replaced". ' +
+        'Whether the word is in imperative mood is determined by ' +
+        'whitelisting. The general whitelist is available at ' +
+        'https://github.com/mristin/opinionated-commit-message/' +
+        'blob/master/src/mostFrequentEnglishVerbs.ts. ' +
+        'You can whitelist additional verbs using "additional-verbs" input ' +
+        'to your GitHub action (currently no additional verbs were thus ' +
+        'specified). Moreover, you can also whitelist additional verbs ' +
+        'in a file given as "path-to-additional-verbs" input to ' +
+        'your GitHub action (currently no whitelist file was specified). ' +
+        'Please check the whitelist and either change the first word ' +
+        'of the subject or whitelist the verb.'
+    ]);
   }
 );
 
 it(
   'reports the subject starting with a non-verb ' +
-    'with additional verbs given.',
+    'with additional verbs given as direct input.',
   () => {
+    const inputs = input.parseInputs('table', '', 'false').mustInputs();
+
     const message =
       'Replaced SomeClass to OtherClass\n' +
       '\n' +
       'This replaces the SomeClass with OtherClass in all of the module \n' +
       'since Some class was deprecated.';
 
-    const errors = inspection.check(
-      message,
-      new Set<string>(['table']),
-      false
-    );
+    const errors = inspection.check(message, inputs);
+
     expect(errors.length).toBe(1);
-    expect(errors[0].startsWith('The subject must start in imperative mood'));
+    expect(errors).toEqual([
+      'The subject must start with a verb in imperative mood, ' +
+        'but it started with: "Replaced". ' +
+        'Whether the word is in imperative mood is ' +
+        'determined by whitelisting. The general whitelist is available at ' +
+        'https://github.com/mristin/opinionated-commit-message/' +
+        'blob/master/src/mostFrequentEnglishVerbs.ts. You can whitelist ' +
+        'additional verbs using "additional-verbs" input to your GitHub ' +
+        'action (currently one or more additional verbs were thus specified). ' +
+        'Moreover, you can also whitelist additional verbs in a file given ' +
+        'as "path-to-additional-verbs" input to your GitHub action ' +
+        '(currently no whitelist file was specified). Please check the ' +
+        'whitelist and either change the first word of the subject or ' +
+        'whitelist the verb.'
+    ]);
+  }
+);
+
+it(
+  'reports the subject starting with a non-verb ' +
+    'with additional verbs given in a path.',
+  () => {
+    const inputs = new input.Inputs(
+      false,
+      '/some/path',
+      false,
+      new Set<string>('table')
+    );
+
+    const message =
+      'Replaced SomeClass to OtherClass\n' +
+      '\n' +
+      'This replaces the SomeClass with OtherClass in all of the module \n' +
+      'since Some class was deprecated.';
+
+    const errors = inspection.check(message, inputs);
+
+    expect(errors.length).toBe(1);
+    expect(errors).toEqual([
+      'The subject must start with a verb in imperative mood, ' +
+        'but it started with: "Replaced". ' +
+        'Whether the word is in imperative mood is ' +
+        'determined by whitelisting. The general whitelist is available at ' +
+        'https://github.com/mristin/opinionated-commit-message/' +
+        'blob/master/src/mostFrequentEnglishVerbs.ts. You can whitelist ' +
+        'additional verbs using "additional-verbs" input to your GitHub ' +
+        'action (currently no additional verbs were thus specified). ' +
+        'Moreover, you can also whitelist additional verbs in a file given ' +
+        'as "path-to-additional-verbs" input to your GitHub action ' +
+        '(currently the file is: /some/path). Please check the ' +
+        'whitelist and either change the first word of the subject or ' +
+        'whitelist the verb.'
+    ]);
   }
 );
 
 it('accepts the subject starting with an additional verb.', () => {
+  const inputs = input.parseInputs('table', '', 'false').mustInputs();
+
   const message = 'Table that for me\n\nThis is a dummy commit.';
-  const errors = inspection.check(
-    message,
-    new Set<string>(['table']),
-    false
-  );
+  const errors = inspection.check(message, inputs);
   expect(errors).toEqual([]);
 });
 
@@ -143,15 +228,23 @@ it('reports the subject ending in a dot.', () => {
     'This replaces the SomeClass with OtherClass in all of the module \n' +
     'since Some class was deprecated.';
 
-  const errors = inspection.check(message, new Set<string>(), false);
-  expect(errors).toEqual(["The subject must not end with a dot ('.')."]);
+  const errors = inspection.check(message, defaultInputs);
+  expect(errors).toEqual([
+    "The subject must not end with a dot ('.'). " +
+      'Please remove the trailing dot(s).'
+  ]);
 });
 
 it('reports an incorrect one-line message with allowed one-liners.', () => {
+  const inputs = input.parseInputs('', '', 'true').mustInputs();
+
   const message = 'Change SomeClass to OtherClass.';
 
-  const errors = inspection.check(message, new Set<string>(), true);
-  expect(errors).toEqual(["The subject must not end with a dot ('.')."]);
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([
+    "The subject must not end with a dot ('.'). " +
+      'Please remove the trailing dot(s).'
+  ]);
 });
 
 it('reports too long a body line.', () => {
@@ -161,12 +254,13 @@ it('reports too long a body line.', () => {
     'This replaces the SomeClass with OtherClass in all of the module ' +
     'since Some class was deprecated.';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     'The line 3 of the message (line 1 of the body) exceeds the limit of ' +
       '72 characters. The line contains 97 characters: ' +
       '"This replaces the SomeClass with OtherClass in all of the module since ' +
-      'Some class was deprecated.".'
+      'Some class was deprecated.". ' +
+      'Please reformat the body so that all the lines fit 72 characters.'
   ]);
 });
 
@@ -174,7 +268,8 @@ it('accepts a body line of exactly 72 characters.', () => {
   const message =
     'Do something\n' +
     '\n' +
-    'This patch fixes a typo in the readme file where this project was called\n' +
+    'This patch fixes a typo in the readme file where this project ' +
+    'was called\n' +
     'dead-csharp instead of doctest-csharp.\n' +
     '1234567890' +
     '1234567890' +
@@ -185,7 +280,7 @@ it('accepts a body line of exactly 72 characters.', () => {
     '1234567890' +
     '12';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
@@ -193,7 +288,8 @@ it('ignores the carriage return.', () => {
   const message =
     'Do something\n' +
     '\n' +
-    'This patch fixes a typo in the readme file where this project was called\r\n' +
+    'This patch fixes a typo in the readme file where this project ' +
+    'was called\r\n' +
     'dead-csharp instead of doctest-csharp.\r\n' +
     '1234567890' +
     '1234567890' +
@@ -204,14 +300,14 @@ it('ignores the carriage return.', () => {
     '1234567890' +
     '12';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
 it('accepts body that does not start with a word.', () => {
   const message = 'Change SomeClass to OtherClass\n\n* Do something';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
@@ -219,19 +315,23 @@ it('reports duplicate starting word in subject and body.', () => {
   const message =
     'Change SomeClass to OtherClass\n' +
     '\n' +
-    'Change SomeClass so that OtherClass does not conflict..';
+    'Change SomeClass so that OtherClass does not conflict.';
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     'The first word of the subject ("Change") must not match ' +
-      'the first word of the body.'
+      'the first word of the body. ' +
+      'Please make the body more informative by adding more information ' +
+      'instead of repeating the subject. For example, start by explaining ' +
+      'the problem that this change is intended to solve or what was ' +
+      'previously missing (e.g., "Previously, ....").'
   ]);
 });
 
 it('ignores merge messages.', () => {
   const message = "Merge branch 'V20DataModel' into miho/Conform-to-spec";
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
@@ -246,7 +346,7 @@ This patch does something with the URL:
 ${url}
 The next line conforms to the line length.`;
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
@@ -261,11 +361,12 @@ it('ignores URL on a separate line, but reports non-conform lines.', () => {
 This ${long} patch does something with the URL.
 ${url}`;
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     'The line 3 of the message (line 1 of the body) exceeds ' +
       'the limit of 72 characters. The line contains 92 characters: ' +
-      `"This ${long} patch does something with the URL.".`
+      `"This ${long} patch does something with the URL.". ` +
+      'Please reformat the body so that all the lines fit 72 characters.'
   ]);
 });
 
@@ -282,7 +383,7 @@ This patch does something with the URL: [1]
 
 The next line conforms to the line length.`;
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([]);
 });
 
@@ -300,10 +401,11 @@ This patch does something with the URL: [1]
 
 The ${long} line is too long.`;
 
-  const errors = inspection.check(message, new Set<string>(), false);
+  const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     'The line 7 of the message (line 5 of the body) exceeds ' +
       'the limit of 72 characters. The line contains 74 characters: ' +
-      `"The ${long} line is too long.".`
+      `"The ${long} line is too long.". ` +
+      'Please reformat the body so that all the lines fit 72 characters.'
   ]);
 });

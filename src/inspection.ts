@@ -1,4 +1,5 @@
 import * as mostFrequentEnglishVerbs from './mostFrequentEnglishVerbs';
+import * as input from './input';
 
 interface SubjectBody {
   subject: string;
@@ -48,13 +49,90 @@ function splitSubjectBody(lines: string[]): MaybeSubjectBody {
   return result;
 }
 
-const capitalizedWordRe = new RegExp('^([A-Z][a-z]*)[^a-zA-Z]');
-
+const allLettersRe = new RegExp('^[a-zA-Z][a-zA-Z-]+$');
+const firstWordBeforeSpaceRe = new RegExp('^([a-zA-Z][a-zA-Z-]+)\\s');
 const suffixHashCodeRe = new RegExp('\\s?\\(\\s*#[a-zA-Z_0-9]+\\s*\\)$');
 
-function checkSubject(subject: string, additionalVerbs: Set<string>): string[] {
+function extractFirstWord(text: string): string | null {
+  if (text.length === 0) {
+    return null;
+  }
+
+  if (text.match(allLettersRe)) {
+    return text;
+  } else {
+    const match = firstWordBeforeSpaceRe.exec(text);
+    if (!match) {
+      return null;
+    }
+
+    return match[1];
+  }
+}
+
+function capitalize(word: string): string {
+  if (word.length === 0) {
+    return '';
+  } else if (word.length === 1) {
+    return word.toUpperCase();
+  } else {
+    return word[0].toUpperCase() + word.slice(1).toLowerCase();
+  }
+}
+
+function errorMessageOnNonVerb(
+  firstWord: string,
+  inputs: input.Inputs
+): string {
+  const parts = [
+    'The subject must start with a verb in imperative mood, ' +
+      `but it started with: ${JSON.stringify(firstWord)}. ` +
+      'Whether the word is in imperative mood is determined by ' +
+      'whitelisting. The general whitelist is available at ' +
+      'https://github.com/mristin/opinionated-commit-message/' +
+      'blob/master/src/mostFrequentEnglishVerbs.ts.'
+  ];
+
+  if (!inputs.hasAdditionalVerbsInput) {
+    parts.push(
+      'You can whitelist additional verbs using ' +
+        '"additional-verbs" input to your GitHub action ' +
+        '(currently no additional verbs were thus specified).'
+    );
+  } else {
+    parts.push(
+      'You can whitelist additional verbs using ' +
+        '"additional-verbs" input to your GitHub action ' +
+        `(currently one or more additional verbs were thus ` +
+        'specified).'
+    );
+  }
+
+  if (inputs.pathToAdditionalVerbs.length === 0) {
+    parts.push(
+      'Moreover, you can also whitelist additional verbs in a file ' +
+        'given as "path-to-additional-verbs" input to your GitHub action ' +
+        '(currently no whitelist file was specified).'
+    );
+  } else {
+    parts.push(
+      'Moreover, you can also whitelist additional verbs in a file ' +
+        'given as "path-to-additional-verbs" input to your GitHub action ' +
+        `(currently the file is: ${inputs.pathToAdditionalVerbs}).`
+    );
+  }
+
+  parts.push(
+    'Please check the whitelist and either change the first word ' +
+      'of the subject or whitelist the verb.'
+  );
+
+  return parts.join(' ');
+}
+
+function checkSubject(subject: string, inputs: input.Inputs): string[] {
   // Pre-condition
-  for (const verb of additionalVerbs) {
+  for (const verb of inputs.additionalVerbs) {
     if (verb.length === 0) {
       throw new Error(`Unexpected empty additional verb`);
     }
@@ -76,54 +154,53 @@ function checkSubject(subject: string, additionalVerbs: Set<string>): string[] {
   if (subjectWoCode.length > 50) {
     errors.push(
       `The subject exceeds the limit of 50 characters ` +
-        `(got: ${subject.length}, JSONified: ${JSON.stringify(subjectWoCode)})`
+        `(got: ${subject.length}, JSON: ${JSON.stringify(subjectWoCode)}).` +
+        'Please shorten the subject to make it more succinct.'
     );
   }
 
-  const match = capitalizedWordRe.exec(subjectWoCode);
-
-  if (!match) {
+  const firstWord = extractFirstWord(subjectWoCode);
+  if (!firstWord) {
     errors.push(
-      'The subject must start with a capitalized verb (e.g., "Change").'
+      'Expected the subject to start with a verb in imperative mood ' +
+        'consisting of letters and possibly dashes in-between, ' +
+        `but the subject was: ${JSON.stringify(subjectWoCode)}. ` +
+        'Please re-write the subject so that it starts with ' +
+        'a verb in imperative mood.'
     );
   } else {
-    if (match.length < 2) {
-      throw Error(
-        'Expected at least one group to match the first capitalized word, ' +
-          'but got none.'
+    const capitalized = capitalize(firstWord);
+    if (firstWord !== capitalized) {
+      errors.push(
+        'The subject must start with a capitalized word, ' +
+          `but the current first word is: ${JSON.stringify(firstWord)}. ` +
+          `Please capitalize to: ${JSON.stringify(capitalized)}.`
       );
     }
 
-    const word = match[1];
     if (
-      !mostFrequentEnglishVerbs.SET.has(word.toLowerCase()) &&
-      !additionalVerbs.has(word.toLowerCase())
+      !mostFrequentEnglishVerbs.SET.has(firstWord.toLowerCase()) &&
+      !inputs.additionalVerbs.has(firstWord.toLowerCase())
     ) {
-      if (additionalVerbs.size === 0) {
-        errors.push(
-          'The subject must start in imperative mood with one of the ' +
-            `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
-            'Please see ' +
-            'https://github.com/mristin/opinionated-commit-message/blob/master/' +
-            'src/mostFrequentEnglishVerbs.ts ' +
-            'for a complete list.'
-        );
-      } else {
-        errors.push(
-          'The subject must start in imperative mood with one of the ' +
-            `most frequent English verbs, but got: ${JSON.stringify(word)}. ` +
-            'Please see ' +
-            'https://github.com/mristin/opinionated-commit-message/blob/master/' +
-            'src/mostFrequentEnglishVerbs.ts ' +
-            'for a complete list and ' +
-            'also revisit your list of additional verbs.'
-        );
-      }
+      /*
+       (mristin, 2020-09-09): It might be worthwhile to refactor the rendering
+       of the error messages to a separate module and use classes to represent
+       the errors. The complexity is still manageable, so it is not yet the
+       moment to do so since the refactoring would be quite time-consuming.
+
+       Originally, I did not foresee that error messages need such a large
+       information content.
+       */
+
+      errors.push(errorMessageOnNonVerb(firstWord, inputs));
     }
   }
 
   if (subjectWoCode.endsWith('.')) {
-    errors.push("The subject must not end with a dot ('.').");
+    errors.push(
+      "The subject must not end with a dot ('.'). " +
+        'Please remove the trailing dot(s).'
+    );
   }
 
   return errors;
@@ -157,29 +234,29 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
         `The line ${i + 3} of the message (line ${i + 1} of the body) ` +
           'exceeds the limit of 72 characters. ' +
           `The line contains ${line.length} characters: ` +
-          `${JSON.stringify(line)}.`
+          `${JSON.stringify(line)}. ` +
+          'Please reformat the body so that all the lines fit ' +
+          '72 characters.'
       );
     }
   }
 
-  const bodyFirstWordMatch = capitalizedWordRe.exec(bodyLines[0]);
+  const bodyFirstWord = extractFirstWord(bodyLines[0]);
 
-  if (bodyFirstWordMatch) {
-    const bodyFirstWord = bodyFirstWordMatch[1];
+  if (bodyFirstWord) {
+    const subjectFirstWord = extractFirstWord(subject);
 
-    const subjectFirstWordMatch = capitalizedWordRe.exec(subject);
-    if (
-      subjectFirstWordMatch !== undefined &&
-      subjectFirstWordMatch !== null &&
-      subjectFirstWordMatch.length > 0
-    ) {
-      const subjectFirstWord = subjectFirstWordMatch[1];
+    if (subjectFirstWord) {
       if (subjectFirstWord.toLowerCase() === bodyFirstWord.toLowerCase()) {
         errors.push(
           'The first word of the subject ' +
             `(${JSON.stringify(subjectFirstWord)}) ` +
-            'must not match ' +
-            'the first word of the body.'
+            'must not match the first word of the body. ' +
+            'Please make the body more informative by adding more ' +
+            'information instead of repeating the subject. ' +
+            'For example, start by explaining the problem that this change ' +
+            'is intended to solve or what was previously missing ' +
+            '(e.g., "Previously, ....").'
         );
       }
     }
@@ -193,11 +270,7 @@ const mergeMessageRe = new RegExp(
     'into [^\\000-\\037\\177 ~^:?*[]+$'
 );
 
-export function check(
-  message: string,
-  additionalVerbs: Set<string>,
-  allowOneLiners: boolean
-): string[] {
+export function check(message: string, inputs: input.Inputs): string[] {
   const errors: string[] = [];
 
   if (mergeMessageRe.test(message)) {
@@ -209,8 +282,8 @@ export function check(
   if (lines.length === 0) {
     errors.push(`The message is empty.`);
     return errors;
-  } else if (lines.length === 1 && allowOneLiners) {
-    errors.push(...checkSubject(lines[0], additionalVerbs));
+  } else if (lines.length === 1 && inputs.allowOneLiners) {
+    errors.push(...checkSubject(lines[0], inputs));
   } else {
     const maybeSubjectBody = splitSubjectBody(lines);
     if (maybeSubjectBody.errors.length > 0) {
@@ -221,7 +294,7 @@ export function check(
       }
       const subjectBody = maybeSubjectBody.subjectBody;
 
-      errors.push(...checkSubject(subjectBody.subject, additionalVerbs));
+      errors.push(...checkSubject(subjectBody.subject, inputs));
 
       errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
     }

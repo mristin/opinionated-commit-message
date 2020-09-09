@@ -1,5 +1,3 @@
-import fs from 'fs';
-
 import * as core from '@actions/core';
 
 import * as commitMessages from './commitMessages';
@@ -10,66 +8,42 @@ import * as input from './input';
 function runWithExceptions(): void {
   const messages: string[] = commitMessages.retrieve();
 
-  const additionalVerbs = new Set<string>();
+  ////
+  // Parse inputs
+  ////
 
-  // Parse additional-verbs input
+  const additionalVerbsInput =
+    core.getInput('additional-verbs', {required: false}) ?? '';
 
-  const additionalVerbsInput = core.getInput('additional-verbs', {
-    required: false
-  });
+  const pathToAdditionalVerbsInput =
+    core.getInput('path-to-additional-verbs', {required: false}) ?? '';
 
-  if (additionalVerbsInput) {
-    for (const verb of input.parseVerbs(additionalVerbsInput)) {
-      additionalVerbs.add(verb);
-    }
-  }
+  const allowOneLinersInput =
+    core.getInput('allow-one-liners', {required: false}) ?? '';
 
-  // Parse additional-verbs-from-path input
+  const maybeInputs = input.parseInputs(
+    additionalVerbsInput,
+    pathToAdditionalVerbsInput,
+    allowOneLinersInput
+  );
 
-  const pathToAdditionalVerbs = core.getInput('path-to-additional-verbs', {
-    required: false
-  });
-
-  if (pathToAdditionalVerbs) {
-    if (!fs.existsSync(pathToAdditionalVerbs)) {
-      const error =
-        'The file referenced by path-to-additional-verbs could ' +
-        `not be found: ${pathToAdditionalVerbs}`;
-      core.error(error);
-      core.setFailed(error);
-      return;
-    }
-
-    const text = fs.readFileSync(pathToAdditionalVerbs).toString('utf-8');
-
-    for (const verb of input.parseVerbs(text)) {
-      additionalVerbs.add(verb);
-    }
-  }
-
-  // Parse allow-one-liners input
-  const allowOneLinersText = core.getInput('allow-one-liners', {
-    required: false
-  });
-
-  const allowOneLiners: boolean | null = !allowOneLinersText
-    ? false
-    : input.parseAllowOneLiners(allowOneLinersText);
-
-  if (allowOneLiners === null) {
-    const error =
-      'Unexpected value for allow-one-liners. ' +
-      `Expected either 'true' or 'false', got: ${allowOneLinersText}`;
-    core.error(error);
-    core.setFailed(error);
+  if (maybeInputs.error !== null) {
+    core.error(maybeInputs.error);
+    core.setFailed(maybeInputs.error);
     return;
   }
+
+  const inputs = maybeInputs.mustInputs();
+
+  ////
+  // Inspect
+  ////
 
   // Parts of the error message to be concatenated with '\n'
   const parts: string[] = [];
 
   for (const [messageIndex, message] of messages.entries()) {
-    const errors = inspection.check(message, additionalVerbs, allowOneLiners);
+    const errors = inspection.check(message, inputs);
 
     if (errors.length > 0) {
       const repr: string = represent.formatErrors(
