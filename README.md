@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v2
+        uses: mristin/opinionated-commit-message@v2.2.0
 ```
 
 ## Checked Events
