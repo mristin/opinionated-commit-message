@@ -33,6 +33,7 @@ it('parses the inputs.', () => {
   const maybeInputs = input.parseInputs(
     'integrate\nanalyze',
     pathToVerbs,
+    'true',
     'true'
   );
 
@@ -45,4 +46,5 @@ it('parses the inputs.', () => {
     new Set<string>(['rewrap', 'table', 'integrate', 'analyze'])
   );
   expect(inputs.allowOneLiners).toBeTruthy();
+  expect(inputs.enforceSignOff).toBeTruthy();
 });

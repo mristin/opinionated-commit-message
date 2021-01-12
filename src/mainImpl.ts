@@ -21,10 +21,14 @@ function runWithExceptions(): void {
   const allowOneLinersInput =
     core.getInput('allow-one-liners', {required: false}) ?? '';
 
+  const enforceSignOffInput =
+    core.getInput('enforce-sign-off', {required: false}) ?? '';
+
   const maybeInputs = input.parseInputs(
     additionalVerbsInput,
     pathToAdditionalVerbsInput,
-    allowOneLinersInput
+    allowOneLinersInput,
+    enforceSignOffInput
   );
 
   if (maybeInputs.error !== null) {
