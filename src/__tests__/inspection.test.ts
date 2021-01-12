@@ -1,7 +1,9 @@
 import * as input from '../input';
 import * as inspection from '../inspection';
 
-const defaultInputs: input.Inputs = input.parseInputs('', '', '').mustInputs();
+const defaultInputs: input.Inputs = input
+  .parseInputs('', '', '', '')
+  .mustInputs();
 
 it('reports no errors on correct multi-line message.', () => {
   const message =
@@ -26,7 +28,7 @@ it('reports no errors on OK multi-line message with allowed one-liners.', () => 
 });
 
 it('reports no errors on OK single-line message with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass';
 
@@ -60,7 +62,7 @@ it('reports missing body with disallowed one-liners.', () => {
 });
 
 it('reports missing body with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass\n';
   const errors = inspection.check(message, inputs);
@@ -146,7 +148,7 @@ it(
   'reports the subject starting with a non-verb ' +
     'with additional verbs given as direct input.',
   () => {
-    const inputs = input.parseInputs('table', '', 'false').mustInputs();
+    const inputs = input.parseInputs('table', '', 'false', '').mustInputs();
 
     const message =
       'Replaced SomeClass to OtherClass\n' +
@@ -183,7 +185,8 @@ it(
       false,
       '/some/path',
       false,
-      new Set<string>('table')
+      new Set<string>('table'),
+      false
     );
 
     const message =
@@ -214,7 +217,7 @@ it(
 );
 
 it('accepts the subject starting with an additional verb.', () => {
-  const inputs = input.parseInputs('table', '', 'false').mustInputs();
+  const inputs = input.parseInputs('table', '', 'false', '').mustInputs();
 
   const message = 'Table that for me\n\nThis is a dummy commit.';
   const errors = inspection.check(message, inputs);
@@ -236,7 +239,7 @@ it('reports the subject ending in a dot.', () => {
 });
 
 it('reports an incorrect one-line message with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass.';
 
@@ -407,5 +410,48 @@ The ${long} line is too long.`;
       'the limit of 72 characters. The line contains 74 characters: ' +
       `"The ${long} line is too long.". ` +
       'Please reformat the body so that all the lines fit 72 characters.'
+  ]);
+});
+
+it('accepts the valid body when enforcing the sign-off.', () => {
+  const inputs = input.parseInputs('', '', '', 'true').mustInputs();
+
+  const message = `Do something
+
+It does something.
+
+Signed-off-by: Somebody <some@body.com>
+
+Signed-off is not necessarily the last line.
+
+And multiple sign-offs are possible!
+Signed-off-by: Somebody Else <some@body-else.com>
+`;
+
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([]);
+});
+
+it('rejects invalid sign-offs.', () => {
+  const inputs = input.parseInputs('', '', '', 'true').mustInputs();
+
+  const message = `Do something
+
+It does something.
+
+None of the following satisfy the sign-off:
+Signed-off-by Random Developer <random@developer.example.org>
+signed-off-by: Random Developer <random@developer.example.org>
+Signed-off-by: Random Developer <randomdeveloper.example.org>
+Signed-off-by: Random Developer (random@developer.example.org)
+Signed-off-by: Random Developer random@developer.example.org
+Signed off by: Random Developer <random@developer.example.org>
+Signed_off_by: Random Developer <random@developer.example.org>
+Signed-off-by: Random Developer
+`;
+
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([
+    "The body does not contain any 'Signed-off-by: ' line. Did you sign off the commit with `git commit --signoff`?"
   ]);
 });

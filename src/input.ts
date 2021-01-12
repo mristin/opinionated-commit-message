@@ -10,16 +10,20 @@ export class Inputs {
   // specified by the input "path-to-additional-verbs".
   additionalVerbs: Set<string>;
 
+  public enforceSignOff: boolean;
+
   constructor(
     hasAdditionalVerbsInput: boolean,
     pathToAdditionalVerbs: string,
     allowOneLiners: boolean,
-    additionalVerbs: Set<string>
+    additionalVerbs: Set<string>,
+    enforceSignOff: boolean
   ) {
     this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
     this.pathToAdditionalVerbs = pathToAdditionalVerbs;
     this.allowOneLiners = allowOneLiners;
     this.additionalVerbs = additionalVerbs;
+    this.enforceSignOff = enforceSignOff;
   }
 }
 
@@ -56,7 +60,8 @@ export class MaybeInputs {
 export function parseInputs(
   additionalVerbsInput: string,
   pathToAdditionalVerbsInput: string,
-  allowOneLinersInput: string
+  allowOneLinersInput: string,
+  enforceSignOffInput: string
 ): MaybeInputs {
   const additionalVerbs = new Set<string>();
 
@@ -86,7 +91,7 @@ export function parseInputs(
 
   const allowOneLiners: boolean | null = !allowOneLinersInput
     ? false
-    : parseAllowOneLiners(allowOneLinersInput);
+    : parseBooleanFromString(allowOneLinersInput);
 
   if (allowOneLiners === null) {
     return new MaybeInputs(
@@ -96,12 +101,25 @@ export function parseInputs(
     );
   }
 
+  const enforceSignOff: boolean | null = !enforceSignOffInput
+    ? false
+    : parseBooleanFromString(enforceSignOffInput);
+
+  if (enforceSignOff === null) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for enforce-sign-off. ' +
+        `Expected either 'true' or 'false', got: ${enforceSignOffInput}`
+    );
+  }
+
   return new MaybeInputs(
     new Inputs(
       hasAdditionalVerbsInput,
       pathToAdditionalVerbsInput,
       allowOneLiners,
-      additionalVerbs
+      additionalVerbs,
+      enforceSignOff
     ),
     null
   );
@@ -123,7 +141,7 @@ export function parseVerbs(text: string): string[] {
   return verbs;
 }
 
-export function parseAllowOneLiners(text: string): boolean | null {
+function parseBooleanFromString(text: string): boolean | null {
   if (text === '' || text.toLowerCase() === 'false' || text === '0') {
     return false;
   }

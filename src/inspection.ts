@@ -265,6 +265,30 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
   return errors;
 }
 
+const signedOffByRe = new RegExp(
+  '^\\s*Signed-off-by:\\s*[^<]+\\s*<[^@>, ]+@[^@>, ]+>\\s*$'
+);
+
+function checkSignedOff(bodyLines: string[]): string[] {
+  const errors: string[] = [];
+
+  let matches = 0;
+  for (const line of bodyLines) {
+    if (signedOffByRe.test(line)) {
+      matches++;
+    }
+  }
+
+  if (matches === 0) {
+    errors.push(
+      "The body does not contain any 'Signed-off-by: ' line. " +
+        'Did you sign off the commit with `git commit --signoff`?'
+    );
+  }
+
+  return errors;
+}
+
 const mergeMessageRe = new RegExp(
   "^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
     'into [^\\000-\\037\\177 ~^:?*[]+$'
@@ -297,6 +321,10 @@ export function check(message: string, inputs: input.Inputs): string[] {
       errors.push(...checkSubject(subjectBody.subject, inputs));
 
       errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+
+      if (inputs.enforceSignOff) {
+        errors.push(...checkSignedOff(subjectBody.bodyLines));
+      }
     }
   }
 
