@@ -16,6 +16,10 @@ param(
     [switch]
     $allowOneLiners = $false,
 
+    [Parameter(HelpMessage = "If set, the commit must be signed off")]
+    [switch]
+    $enforceSignOff = $false,
+
     [Parameter(HelpMessage = "If set, the script does not throw an exception on failed checks")]
     [switch]
     $dontThrow = $false
@@ -247,6 +251,32 @@ function CheckBody([string]$subject, [string[]] $bodyLines)
     return $errors
 }
 
+$signedOffByRe = [Regex]::new('^\\s*Signed-off-by:\\s*[^<]+\\s*<[^@>, ]+@[^@>, ]+>\\s*$')
+
+function CheckSignedOff([string[]]$bodyLines)
+{
+    $errors = @()
+
+    $matches = 0
+    foreach($line in $bodyLines)
+    {
+        if ($signedOffByRe.IsMatch($line))
+        {
+            $matches += 1
+        }
+    }
+
+    if ($matches -eq 0)
+    {
+        $errors += (
+            "The body does not contain any 'Signed-off-by: ' line. " +
+            "Did you sign off the commit with ``git commit --signoff``?"
+        )
+    }
+
+    return $errors
+}
+
 function Check([string]$text, [hashtable]$verbs)
 {
     [string[]]$errors = @()
@@ -302,6 +332,11 @@ function Check([string]$text, [hashtable]$verbs)
 
             $bodyLines = $trimmedLines |Select-Object -Skip 2
             $errors = $errors + ( CheckBody -subject $subject -bodyLines $bodyLines)
+
+            if ($enforceSignOff)
+            {
+                $errors = $errors + ( CheckSignedOff -bodyLines $bodyLines)
+            }
         }
     }
 

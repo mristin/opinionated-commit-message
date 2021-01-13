@@ -402,6 +402,70 @@ function TestOKWithLinkDefinition
     return $true
 }
 
+function TestOKSignedOff
+{
+    $message = (
+        "Do something`n`nIt does something.`n" +
+        "Signed-off-by: Somebody <some@body.com>`n`n" +
+        "Signed-off is not necessarily the last line.`n`n" +
+        "And multiple sign-offs are possible!`n" +
+        "Signed-off-by: Somebody Else <some@body-else.com>`n"
+    )
+    $got = (powershell -File OpinionatedCommitMessage.ps1 -message $message -dontThrow)|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = "The message is OK.${nl}"
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestOKSignedOff: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestOKSignedOff: OK"
+    return $true
+}
+
+function TestFailSignedOff
+{
+    $message = (
+        "Do something`n`n" +
+        "It does something.`n`n" +
+        "None of the following satisfy the sign-off:`n" +
+        "Signed-off-by Random Developer <random@developer.example.org>`n" +
+        "signed-off-by: Random Developer <random@developer.example.org>`n" +
+        "Signed-off-by: Random Developer <randomdeveloper.example.org>`n" +
+        "Signed-off-by: Random Developer (random@developer.example.org)`n" +
+        "Signed-off-by: Random Developer random@developer.example.org`n" +
+        "Signed off by: Random Developer <random@developer.example.org>`n" +
+        "Signed_off_by: Random Developer <random@developer.example.org>`n" +
+        "Signed-off-by: Random Developer`n"
+    )
+    
+    $got = (powershell `
+        -File OpinionatedCommitMessage.ps1 `
+        -message $message `
+        -enforceSignOff `
+        -dontThrow
+    )|Out-String
+
+    $nl = [Environment]::NewLine
+    $expected = (
+        "* The body does not contain any 'Signed-off-by: ' line. " +
+        "Did you sign off the commit with ``git commit --signoff``?${nl}"
+    )
+
+    if ($got -ne $expected)
+    {
+        Write-Host "TestFailSignedOff: FAILED"
+        WriteExpectedGot -expected $expected -got $got
+        return $false
+    }
+
+    Write-Host "TestFailSignedOff: OK"
+    return $true
+}
 
 function Main
 {
@@ -428,7 +492,9 @@ function Main
         $success = TestFailWithAllowOneLiners -and $success
         $success = TestOKWithURLOnSeparateLine -and $success
         $success = TestOKWithLinkDefinition -and $success
-
+        $success = TestOKSignedOff -and $success
+        $success = TestFailSignedOff -and $success
+        
         if(!$success)
         {
             throw "One or more unit tests failed."
