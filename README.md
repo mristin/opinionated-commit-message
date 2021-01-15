@@ -158,6 +158,33 @@ You can allow one-liner commit messages by setting the flag `allow-one-liners`:
           allow-one-liners: 'true'
 ```
 
+## Enforce Sign-off
+
+Most projects do not require a sign-off on the commits.
+However, there are projects which need every commit to be signed off to avoid legal, safety and other official 
+repercussions (for more information, 
+see [this issue](https://github.com/mristin/opinionated-commit-message/issues/73) and
+[this StackOverflow question](https://stackoverflow.com/questions/1962094/what-is-the-sign-off-feature-in-git-for)). 
+
+We provide an `enforce-sign-off` flag so that you can enforce the sign-off in the commits by:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v2
+        with:
+          enforce-sign-off: 'true'
+```
+
+The check expects that the body of the commit contains one or more lines like this one:
+
+```
+Signed-off-by: Some Body <some@body.com>
+```
+
+You usually sign off the commits using `git commit --signoff`. 
+
+
 ## Local Usage
 
 We translated the opinionated-commit-message to a powershell script so that
