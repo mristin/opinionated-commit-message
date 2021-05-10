@@ -39,7 +39,7 @@
     "all": "npm run build && npm run format && npm run lint && npm run pack && npm run to-powershell && npm test"
   },
   "dependencies": {
-    "@actions/core": "^1.2.4",
+    "@actions/core": "^1.2.6",
     "@actions/github": "^2.2.0"
   },
   "devDependencies": {
