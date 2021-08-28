@@ -8851,7 +8851,17 @@ exports.SET = new Set([
     'tweak',
     'tune',
     'reset',
-    're-set'
+    're-set',
+    'scale',
+    're-scale',
+    'rescale',
+    'dry',
+    'augment',
+    'favor',
+    'optimize',
+    'optimise',
+    'default',
+    'patch'
 ]);
 
 
