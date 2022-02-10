@@ -158,6 +158,23 @@ You can allow one-liner commit messages by setting the flag `allow-one-liners`:
           allow-one-liners: 'true'
 ```
 
+## Custom line length on the body
+
+For terminal use and for some GUIs with a columnar and monospaced history it is a good practice to limit the length
+of body lines to 72 characters. For teams that use only modern UIs such as GitHub Web this is a harsh restriction,
+especially when using a PR description as the body, where the workflow can become quite confusing since there is no
+limitation on the UI itself.
+
+You can change the default line length by setting the flag `max-body-line-length`:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v2
+        with:
+          max-body-line-length: '100'
+```
+
 ## Skip Body Check
 
 For some repositories only the subject matters while the body is allowed to be free-form.

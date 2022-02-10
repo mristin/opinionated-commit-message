@@ -205,6 +205,7 @@ it(
       '/some/path',
       false,
       new Set<string>('table'),
+      72,
       false,
       false
     );
@@ -284,6 +285,25 @@ it('reports too long a body line.', () => {
       '"This replaces the SomeClass with OtherClass in all of the module since ' +
       'Some class was deprecated.". ' +
       'Please reformat the body so that all the lines fit 72 characters.'
+  ]);
+});
+
+it('reports too long a body line with custom max length.', () => {
+  const message =
+    'Change SomeClass to OtherClass\n' +
+    '\n' +
+    'This replaces the SomeClass with OtherClass in all of the module ' +
+    'since Some class was deprecated.';
+
+  const inputs = input.parseInputs('', '', '', '90', '').mustInputs();
+
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([
+    'The line 3 of the message (line 1 of the body) exceeds the limit of ' +
+      '90 characters. The line contains 97 characters: ' +
+      '"This replaces the SomeClass with OtherClass in all of the module since ' +
+      'Some class was deprecated.". ' +
+      'Please reformat the body so that all the lines fit 90 characters.'
   ]);
 });
 
@@ -434,7 +454,7 @@ The ${long} line is too long.`;
 });
 
 it('accepts the valid body when enforcing the sign-off.', () => {
-  const inputs = input.parseInputs('', '', '', 'true', '').mustInputs();
+  const inputs = input.parseInputs('', '', '', '', 'true', '').mustInputs();
 
   const message = `Do something
 
@@ -453,7 +473,7 @@ Signed-off-by: Somebody Else <some@body-else.com>
 });
 
 it('rejects invalid sign-offs.', () => {
-  const inputs = input.parseInputs('', '', '', 'true', '').mustInputs();
+  const inputs = input.parseInputs('', '', '', '', 'true', '').mustInputs();
 
   const message = `Do something
 
