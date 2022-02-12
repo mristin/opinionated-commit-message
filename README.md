@@ -184,19 +184,6 @@ Signed-off-by: Some Body <some@body.com>
 
 You usually sign off the commits using `git commit --signoff`. 
 
-
-## Local Usage
-
-We translated the opinionated-commit-message to a powershell script so that
-you can include it in your local pre-commit and pre-push checks.
-
-The script is available at: [`local/powershell/OpinionatedCommitMessage.ps1`](
-local/powershell/OpinionatedCommitMessage.ps1
-)
-
-You can just copy & paste it into your project. There are no dependencies
-to be installed.
-
 ## Known Issue
 
 Commit messages of the pull request are not verified unless you trigger the 
