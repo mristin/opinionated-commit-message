@@ -190,6 +190,7 @@ export const SET = new Set([
   'die',
   'direct',
   'disappear',
+  'discontinue',
   'discourage',
   'discover',
   'discuss',

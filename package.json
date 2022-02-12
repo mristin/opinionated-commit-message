@@ -35,8 +35,7 @@
     "fix": "eslint src/**/*.ts --fix",
     "pack": "ncc build",
     "test": "jest",
-    "to-powershell": "ts-node src/scripts/toPowershell.ts && powershell local/powershell/OpinionatedCommitMessage.Tests.ps1",
-    "all": "npm run build && npm run format && npm run lint && npm run pack && npm run to-powershell && npm test"
+    "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
   },
   "dependencies": {
     "@actions/core": "^1.6.0",
