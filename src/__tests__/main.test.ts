@@ -1,141 +1,163 @@
 import fs from 'fs';
-
 import * as core from '@actions/core';
-
 import * as mainImpl from '../mainImpl';
 import * as commitMessages from '../commitMessages';
 
-jest.mock('fs');
-jest.mock('@actions/core');
-jest.mock('../commitMessages');
-
 /* eslint eqeqeq: "off", curly: "error" */
 
+beforeEach(() => {
+  jest.restoreAllMocks();
+  jest.clearAllMocks();
+});
+
+it('initializes the core mock to check independence of the tests.', () => {
+  jest
+    .spyOn(core, 'getInput')
+    .mockImplementation(name => (name === 'allow-one-liners' ? 'true' : ''));
+});
+
+it('ensures that the core mocks are reset between the tests.', () => {
+  // NOTE (mristin, 2022-02-13):
+  // This is a regression test. Jest does not reset the mocks between the
+  // individual tests. Hence, when we mock getInput on the core module, the mock
+  // persists between the tests. This bug in the test code was hard to
+  // understand as it only shows up if *all* the tests are run.
+  const someInput = core.getInput('allow-one-liners');
+  expect(someInput).toEqual('');
+});
+
 it('considers additional verbs.', () => {
-  (commitMessages.retrieve as any).mockImplementation(() => [
-    'Table SomeClass\n\nThis is a dummy commit.'
-  ]);
+  jest
+    .spyOn(commitMessages, 'retrieve')
+    .mockImplementation(() => ['Table SomeClass\n\nThis is a dummy commit.']);
 
-  const mockSetFailed = jest.fn();
-  (core as any).setFailed = mockSetFailed;
+  jest.spyOn(core, 'setFailed');
 
-  (core as any).getInput = (name: string) =>
-    name === 'additional-verbs' ? 'rewrap,table' : null;
+  jest
+    .spyOn(core, 'getInput')
+    .mockImplementation(name =>
+      name === 'additional-verbs' ? 'rewrap,table' : ''
+    );
 
   mainImpl.run();
 
-  expect(mockSetFailed.mock.calls).toEqual([]);
+  expect(core.setFailed).not.toHaveBeenCalled();
 });
 
 it('considers additional verbs from path.', () => {
-  (commitMessages.retrieve as any).mockImplementation(() => [
-    'Table SomeClass\n\nThis is a dummy commit.'
-  ]);
+  jest
+    .spyOn(commitMessages, 'retrieve')
+    .mockImplementation(() => ['Table SomeClass\n\nThis is a dummy commit.']);
 
-  const mockSetFailed = jest.fn();
-  (core as any).setFailed = mockSetFailed;
+  jest.spyOn(core, 'setFailed');
 
   const pathToVerbs = 'src/verbs.txt';
 
-  (core as any).getInput = (name: string) =>
-    name === 'path-to-additional-verbs' ? pathToVerbs : null;
+  jest
+    .spyOn(core, 'getInput')
+    .mockImplementation(name =>
+      name === 'path-to-additional-verbs' ? pathToVerbs : ''
+    );
 
-  (fs as any).existsSync = (path: string) => path === pathToVerbs;
+  jest.spyOn(fs, 'existsSync').mockImplementation(path => path === pathToVerbs);
 
-  (fs as any).readFileSync = (path: string) => {
+  jest.spyOn(fs, 'readFileSync').mockImplementation(path => {
     if (path === pathToVerbs) {
       return 'rewrap\ntable';
     }
 
     throw new Error(`Unexpected readFileSync in the unit test from: ${path}`);
-  };
+  });
 
-  mainImpl.run();
-
-  expect(mockSetFailed.mock.calls).toEqual([]);
+  expect(core.setFailed).not.toHaveBeenCalled();
 });
 
 it('considers allow-one-liners.', () => {
-  (commitMessages.retrieve as any).mockImplementation(() => ['Do something']);
+  jest
+    .spyOn(commitMessages, 'retrieve')
+    .mockImplementation(() => ['Do something']);
 
-  const mockSetFailed = jest.fn();
-  (core as any).setFailed = mockSetFailed;
+  jest.spyOn(core, 'setFailed');
 
-  (core as any).getInput = (name: string) =>
-    name === 'allow-one-liners' ? 'true' : null;
+  jest
+    .spyOn(core, 'getInput')
+    .mockImplementation(name => (name === 'allow-one-liners' ? 'true' : ''));
 
   mainImpl.run();
 
-  expect(mockSetFailed.mock.calls).toEqual([]);
+  expect(core.setFailed).not.toHaveBeenCalled();
 });
 
 it('formats properly no error message.', () => {
-  (commitMessages.retrieve as any).mockImplementation(() => [
-    'Change SomeClass to OtherClass\n' +
-      '\n' +
-      'This replaces the SomeClass with OtherClass in all of the module \n' +
-      'since Some class was deprecated.'
-  ]);
+  jest
+    .spyOn(commitMessages, 'retrieve')
+    .mockImplementation(() => [
+      'Change SomeClass to OtherClass\n' +
+        '\n' +
+        'This replaces the SomeClass with OtherClass in all of the module \n' +
+        'since Some class was deprecated.'
+    ]);
 
-  const mockSetFailed = jest.fn();
-  (core as any).setFailed = mockSetFailed;
+  jest.spyOn(core, 'setFailed');
 
   mainImpl.run();
 
-  expect(mockSetFailed.mock.calls).toEqual([]);
+  expect(core.setFailed).not.toHaveBeenCalled();
 });
 
 it('formats properly errors on a single message.', () => {
-  (commitMessages.retrieve as any).mockImplementation(() => [
-    'change SomeClass to OtherClass\n\nSomeClass with OtherClass'
-  ]);
+  jest
+    .spyOn(commitMessages, 'retrieve')
+    .mockImplementation(() => [
+      'change SomeClass to OtherClass\n\nSomeClass with OtherClass'
+    ]);
 
-  const mockSetFailed = jest.fn();
-  (core as any).setFailed = mockSetFailed;
+  jest.spyOn(core, 'setFailed');
 
   mainImpl.run();
-  expect(mockSetFailed.mock.calls).toEqual([
-    [
-      'The message 1 is invalid:\n' +
-        '* The subject must start with a capitalized word, but ' +
-        'the current first word is: "change". ' +
-        'Please capitalize to: "Change".\n' +
-        'The original message was:\n' +
-        'change SomeClass to OtherClass\n' +
-        '\n' +
-        'SomeClass with OtherClass\n'
-    ]
-  ]);
+
+  expect(core.setFailed).toHaveBeenCalledTimes(1);
+
+  expect(core.setFailed).toBeCalledWith(
+    'The message 1 is invalid:\n' +
+      '* The subject must start with a capitalized word, but ' +
+      'the current first word is: "change". ' +
+      'Please capitalize to: "Change".\n' +
+      'The original message was:\n' +
+      'change SomeClass to OtherClass\n' +
+      '\n' +
+      'SomeClass with OtherClass\n'
+  );
 });
 
 it('formats properly errors on two messages.', () => {
-  (commitMessages.retrieve as any).mockImplementation(() => [
-    `change SomeClass to OtherClass\n\nDo something`,
-    'Change other subject\n\nChange body'
-  ]);
+  jest
+    .spyOn(commitMessages, 'retrieve')
+    .mockImplementation(() => [
+      `change SomeClass to OtherClass\n\nDo something`,
+      'Change other subject\n\nChange body'
+    ]);
 
-  const mockSetFailed = jest.fn();
-  (core as any).setFailed = mockSetFailed;
+  jest.spyOn(core, 'setFailed');
 
   mainImpl.run();
 
-  expect(mockSetFailed.mock.calls).toEqual([
-    [
-      'The message 1 is invalid:\n' +
-        '* The subject must start with a capitalized word, ' +
-        'but the current first word is: "change". ' +
-        'Please capitalize to: "Change".\n' +
-        'The original message was:\n' +
-        'change SomeClass to OtherClass\n\nDo something\n\n' +
-        'The message 2 is invalid:\n' +
-        '* The first word of the subject ("Change") must not match ' +
-        'the first word of the body. Please make the body more informative ' +
-        'by adding more information instead of repeating the subject. ' +
-        'For example, start by explaining the problem that this change ' +
-        'is intended to solve or what was previously missing ' +
-        '(e.g., "Previously, ....").\n' +
-        'The original message was:\n' +
-        'Change other subject\n\nChange body\n'
-    ]
-  ]);
+  expect(core.setFailed).toBeCalledTimes(1);
+  expect(core.setFailed).toHaveBeenCalledWith(
+    'The message 1 is invalid:\n' +
+      '* The subject must start with a capitalized word, ' +
+      'but the current first word is: "change". ' +
+      'Please capitalize to: "Change".\n' +
+      'The original message was:\n' +
+      'change SomeClass to OtherClass\n\nDo something\n\n' +
+      'The message 2 is invalid:\n' +
+      '* The first word of the subject ("Change") must not match ' +
+      'the first word of the body. Please make the body more informative ' +
+      'by adding more information instead of repeating the subject. ' +
+      'For example, start by explaining the problem that this change ' +
+      'is intended to solve or what was previously missing ' +
+      '(e.g., "Previously, ....").\n' +
+      'The original message was:\n' +
+      'Change other subject\n\nChange body\n'
+  );
 });
