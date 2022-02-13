@@ -88,6 +88,28 @@ it('considers allow-one-liners.', () => {
   expect(core.setFailed).not.toHaveBeenCalled();
 });
 
+it('considers skip-body-check.', () => {
+  jest
+    .spyOn(commitMessages, 'retrieve')
+    .mockImplementation(() => [
+      'Change SomeClass to OtherClass\n' +
+        '\n' +
+        'Change SomeClass to OtherClass.' +
+        'This replaces the SomeClass with OtherClass in all of the module ' +
+        'since Some class was deprecated.'
+    ]);
+
+  jest.spyOn(core, 'setFailed');
+
+  jest
+    .spyOn(core, 'getInput')
+    .mockImplementation(name => (name === 'skip-body-check' ? 'true' : ''));
+
+  mainImpl.run();
+
+  expect(core.setFailed).not.toHaveBeenCalled();
+});
+
 it('formats properly no error message.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')

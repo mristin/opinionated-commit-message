@@ -536,7 +536,9 @@ function check(message, inputs) {
             }
             const subjectBody = maybeSubjectBody.subjectBody;
             errors.push(...checkSubject(subjectBody.subject, inputs));
-            errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+            if (!inputs.skipBodyCheck) {
+                errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+            }
             if (inputs.enforceSignOff) {
                 errors.push(...checkSignedOff(subjectBody.bodyLines));
             }
@@ -1265,12 +1267,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseVerbs = exports.parseInputs = exports.MaybeInputs = exports.Inputs = void 0;
 const fs_1 = __importDefault(__webpack_require__(747));
 class Inputs {
-    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs, enforceSignOff) {
+    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs, enforceSignOff, skipBodyCheck) {
         this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
         this.pathToAdditionalVerbs = pathToAdditionalVerbs;
         this.allowOneLiners = allowOneLiners;
         this.additionalVerbs = additionalVerbs;
         this.enforceSignOff = enforceSignOff;
+        this.skipBodyCheck = skipBodyCheck;
     }
 }
 exports.Inputs = Inputs;
@@ -1294,7 +1297,7 @@ class MaybeInputs {
     }
 }
 exports.MaybeInputs = MaybeInputs;
-function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, enforceSignOffInput) {
+function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, enforceSignOffInput, skipBodyCheckInput) {
     const additionalVerbs = new Set();
     const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
     if (additionalVerbsInput) {
@@ -1326,7 +1329,14 @@ function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneL
         return new MaybeInputs(null, 'Unexpected value for enforce-sign-off. ' +
             `Expected either 'true' or 'false', got: ${enforceSignOffInput}`);
     }
-    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs, enforceSignOff), null);
+    const skipBodyCheck = !skipBodyCheckInput
+        ? false
+        : parseBooleanFromString(skipBodyCheckInput);
+    if (skipBodyCheck === null) {
+        return new MaybeInputs(null, 'Unexpected value for skip-body-check. ' +
+            `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`);
+    }
+    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs, enforceSignOff, skipBodyCheck), null);
 }
 exports.parseInputs = parseInputs;
 function parseVerbs(text) {
@@ -1724,7 +1734,7 @@ const inspection = __importStar(__webpack_require__(117));
 const represent = __importStar(__webpack_require__(110));
 const input = __importStar(__webpack_require__(265));
 function runWithExceptions() {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     const messages = commitMessages.retrieve();
     ////
     // Parse inputs
@@ -1733,7 +1743,8 @@ function runWithExceptions() {
     const pathToAdditionalVerbsInput = (_b = core.getInput('path-to-additional-verbs', { required: false })) !== null && _b !== void 0 ? _b : '';
     const allowOneLinersInput = (_c = core.getInput('allow-one-liners', { required: false })) !== null && _c !== void 0 ? _c : '';
     const enforceSignOffInput = (_d = core.getInput('enforce-sign-off', { required: false })) !== null && _d !== void 0 ? _d : '';
-    const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, enforceSignOffInput);
+    const skipBodyCheckInput = (_e = core.getInput('skip-body-check', { required: false })) !== null && _e !== void 0 ? _e : '';
+    const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, enforceSignOffInput, skipBodyCheckInput);
     if (maybeInputs.error !== null) {
         core.error(maybeInputs.error);
         core.setFailed(maybeInputs.error);

@@ -24,11 +24,15 @@ function runWithExceptions(): void {
   const enforceSignOffInput =
     core.getInput('enforce-sign-off', {required: false}) ?? '';
 
+  const skipBodyCheckInput =
+    core.getInput('skip-body-check', {required: false}) ?? '';
+
   const maybeInputs = input.parseInputs(
     additionalVerbsInput,
     pathToAdditionalVerbsInput,
     allowOneLinersInput,
-    enforceSignOffInput
+    enforceSignOffInput,
+    skipBodyCheckInput
   );
 
   if (maybeInputs.error !== null) {

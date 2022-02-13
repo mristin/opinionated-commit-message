@@ -2,7 +2,7 @@ import * as input from '../input';
 import * as inspection from '../inspection';
 
 const defaultInputs: input.Inputs = input
-  .parseInputs('', '', '', '')
+  .parseInputs('', '', '', '', '')
   .mustInputs();
 
 it('reports no errors on correct multi-line message.', () => {
@@ -28,7 +28,7 @@ it('reports no errors on OK multi-line message with allowed one-liners.', () => 
 });
 
 it('reports no errors on OK single-line message with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true', '').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass';
 
@@ -55,6 +55,25 @@ it('reports too few lines with disallowed one-liners.', () => {
   ]);
 });
 
+it('reports no errors on any message when body check is disabled.', () => {
+  const message =
+    'Change SomeClass to OtherClass\n' +
+    '\n' +
+    'This replaces the SomeClass with OtherClass in all of the module ' +
+    'since Some class was deprecated. This is long message should not ' +
+    'be checked.';
+
+  const inputCheckingBody = input.parseInputs('', '', '', '', '').mustInputs();
+
+  expect(inspection.check(message, inputCheckingBody)).not.toEqual([]);
+
+  const inputNotCheckingBody = input
+    .parseInputs('', '', '', '', 'true')
+    .mustInputs();
+
+  expect(inspection.check(message, inputNotCheckingBody)).toEqual([]);
+});
+
 it('reports missing body with disallowed one-liners.', () => {
   const message = 'Change SomeClass to OtherClass\n\n';
   const errors = inspection.check(message, defaultInputs);
@@ -62,7 +81,7 @@ it('reports missing body with disallowed one-liners.', () => {
 });
 
 it('reports missing body with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true', '').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass\n';
   const errors = inspection.check(message, inputs);
@@ -148,7 +167,7 @@ it(
   'reports the subject starting with a non-verb ' +
     'with additional verbs given as direct input.',
   () => {
-    const inputs = input.parseInputs('table', '', 'false', '').mustInputs();
+    const inputs = input.parseInputs('table', '', 'false', '', '').mustInputs();
 
     const message =
       'Replaced SomeClass to OtherClass\n' +
@@ -186,6 +205,7 @@ it(
       '/some/path',
       false,
       new Set<string>('table'),
+      false,
       false
     );
 
@@ -217,7 +237,7 @@ it(
 );
 
 it('accepts the subject starting with an additional verb.', () => {
-  const inputs = input.parseInputs('table', '', 'false', '').mustInputs();
+  const inputs = input.parseInputs('table', '', 'false', '', '').mustInputs();
 
   const message = 'Table that for me\n\nThis is a dummy commit.';
   const errors = inspection.check(message, inputs);
@@ -239,7 +259,7 @@ it('reports the subject ending in a dot.', () => {
 });
 
 it('reports an incorrect one-line message with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true', '').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass.';
 
@@ -414,7 +434,7 @@ The ${long} line is too long.`;
 });
 
 it('accepts the valid body when enforcing the sign-off.', () => {
-  const inputs = input.parseInputs('', '', '', 'true').mustInputs();
+  const inputs = input.parseInputs('', '', '', 'true', '').mustInputs();
 
   const message = `Do something
 
@@ -433,7 +453,7 @@ Signed-off-by: Somebody Else <some@body-else.com>
 });
 
 it('rejects invalid sign-offs.', () => {
-  const inputs = input.parseInputs('', '', '', 'true').mustInputs();
+  const inputs = input.parseInputs('', '', '', 'true', '').mustInputs();
 
   const message = `Do something
 

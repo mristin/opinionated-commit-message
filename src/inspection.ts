@@ -320,7 +320,9 @@ export function check(message: string, inputs: input.Inputs): string[] {
 
       errors.push(...checkSubject(subjectBody.subject, inputs));
 
-      errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+      if (!inputs.skipBodyCheck) {
+        errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+      }
 
       if (inputs.enforceSignOff) {
         errors.push(...checkSignedOff(subjectBody.bodyLines));
