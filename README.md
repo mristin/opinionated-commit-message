@@ -160,12 +160,11 @@ You can allow one-liner commit messages by setting the flag `allow-one-liners`:
 
 ## Custom line length on the body
 
-For terminal use and for some GUIs with a columnar and monospaced history it is a good practice to limit the length
-of body lines to 72 characters. For teams that use only modern UIs such as GitHub Web this is a harsh restriction,
-especially when using a PR description as the body, where the workflow can become quite confusing since there is no
-limitation on the UI itself.
+For use in terminals and monospaced GUIs it is a good practice to limit the line length of the body to 72 characters.
+However, the restriction is unnecessarily harsh for teams that use modern GUIs such as GitHub Web.
+This is especially so when using a description of the pull request as the body, since there is no such limitation in the GitHub UI itself.
 
-You can change the default line length by setting the flag `max-body-line-length`:
+You can change the imposed maximum line length by setting the flag `max-body-line-length`:
 
 ```yaml
     steps:
