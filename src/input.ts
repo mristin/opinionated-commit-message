@@ -4,6 +4,7 @@ export class Inputs {
   public hasAdditionalVerbsInput: boolean;
   public pathToAdditionalVerbs: string;
   public allowOneLiners: boolean;
+  public skipBodyCheck: boolean;
 
   // This is a complete appendix to the whiltelist parsed both from
   // the GitHub action input "additional-verbs" and from the file
@@ -17,13 +18,15 @@ export class Inputs {
     pathToAdditionalVerbs: string,
     allowOneLiners: boolean,
     additionalVerbs: Set<string>,
-    enforceSignOff: boolean
+    enforceSignOff: boolean,
+    skipBodyCheck: boolean
   ) {
     this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
     this.pathToAdditionalVerbs = pathToAdditionalVerbs;
     this.allowOneLiners = allowOneLiners;
     this.additionalVerbs = additionalVerbs;
     this.enforceSignOff = enforceSignOff;
+    this.skipBodyCheck = skipBodyCheck;
   }
 }
 
@@ -61,7 +64,8 @@ export function parseInputs(
   additionalVerbsInput: string,
   pathToAdditionalVerbsInput: string,
   allowOneLinersInput: string,
-  enforceSignOffInput: string
+  enforceSignOffInput: string,
+  skipBodyCheckInput: string
 ): MaybeInputs {
   const additionalVerbs = new Set<string>();
 
@@ -113,13 +117,26 @@ export function parseInputs(
     );
   }
 
+  const skipBodyCheck: boolean | null = !skipBodyCheckInput
+    ? false
+    : parseBooleanFromString(skipBodyCheckInput);
+
+  if (skipBodyCheck === null) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for skip-body-check. ' +
+        `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`
+    );
+  }
+
   return new MaybeInputs(
     new Inputs(
       hasAdditionalVerbsInput,
       pathToAdditionalVerbsInput,
       allowOneLiners,
       additionalVerbs,
-      enforceSignOff
+      enforceSignOff,
+      skipBodyCheck
     ),
     null
   );

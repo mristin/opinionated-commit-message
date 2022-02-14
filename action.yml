@@ -24,3 +24,7 @@ inputs:
     description: 'If set to "true", signed-off-by is required in the commit message body'
     required: false
     default: ''
+  skip-body-check:
+    description: 'If set to "true", skip the body check'
+    required: false
+    default: ''

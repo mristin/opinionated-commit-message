@@ -149,13 +149,29 @@ and more verbose body for an informative Git history. However, this might be
 too rigid for certain projects.
 
 You can allow one-liner commit messages by setting the flag `allow-one-liners`:
-
+ 
 ```yaml
     steps:
       - name: Check
         uses: mristin/opinionated-commit-message@v2
         with:
           allow-one-liners: 'true'
+```
+
+## Skip Body Check
+
+For some repositories only the subject matters while the body is allowed to be free-form.
+For example, this is the case when the body of the commit is automatically generated (*e.g.*, by a third-party service that we do not control).
+In such situations, we want check the subject line, but ignore the body in the checks.
+
+You can disable checking the body by setting the flag `skip-body-check`:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v2
+        with:
+          skip-body-check: 'true'
 ```
 
 ## Enforce Sign-off

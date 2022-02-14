@@ -34,6 +34,7 @@ it('parses the inputs.', () => {
     'integrate\nanalyze',
     pathToVerbs,
     'true',
+    'true',
     'true'
   );
 
@@ -47,4 +48,5 @@ it('parses the inputs.', () => {
   );
   expect(inputs.allowOneLiners).toBeTruthy();
   expect(inputs.enforceSignOff).toBeTruthy();
+  expect(inputs.skipBodyCheck).toBeTruthy();
 });
