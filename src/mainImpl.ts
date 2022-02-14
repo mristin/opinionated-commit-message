@@ -21,6 +21,9 @@ function runWithExceptions(): void {
   const allowOneLinersInput =
     core.getInput('allow-one-liners', {required: false}) ?? '';
 
+  const maxSubjectLengthInput =
+    core.getInput('max-subject-line-length', {required: false}) ?? '';
+
   const maxBodyLineLengthInput =
     core.getInput('max-body-line-length', {required: false}) ?? '';
 
@@ -34,6 +37,7 @@ function runWithExceptions(): void {
     additionalVerbsInput,
     pathToAdditionalVerbsInput,
     allowOneLinersInput,
+    maxSubjectLengthInput,
     maxBodyLineLengthInput,
     enforceSignOffInput,
     skipBodyCheckInput

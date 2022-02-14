@@ -151,9 +151,9 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
   // similar services.
   const subjectWoCode = subject.replace(suffixHashCodeRe, '');
 
-  if (subjectWoCode.length > 50) {
+  if (subjectWoCode.length > inputs.maxSubjectLength) {
     errors.push(
-      `The subject exceeds the limit of 50 characters ` +
+      `The subject exceeds the limit of ${inputs.maxSubjectLength} characters ` +
         `(got: ${subject.length}, JSON: ${JSON.stringify(subjectWoCode)}).` +
         'Please shorten the subject to make it more succinct.'
     );
