@@ -2,7 +2,7 @@ import * as input from '../input';
 import * as inspection from '../inspection';
 
 const defaultInputs: input.Inputs = input
-  .parseInputs('', '', '', '', '', '')
+  .parseInputs('', '', '', '', '', '', '')
   .mustInputs();
 
 it('reports no errors on correct multi-line message.', () => {
@@ -28,7 +28,7 @@ it('reports no errors on OK multi-line message with allowed one-liners.', () => 
 });
 
 it('reports no errors on OK single-line message with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true', '', '', '').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '', '', '', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass';
 
@@ -63,12 +63,14 @@ it('reports no errors on any message when body check is disabled.', () => {
     'since Some class was deprecated. This is long message should not ' +
     'be checked.';
 
-  const inputCheckingBody = input.parseInputs('', '', '', '', '').mustInputs();
+  const inputCheckingBody = input
+    .parseInputs('', '', '', '', '', '', '')
+    .mustInputs();
 
   expect(inspection.check(message, inputCheckingBody)).not.toEqual([]);
 
   const inputNotCheckingBody = input
-    .parseInputs('', '', '', '', 'true')
+    .parseInputs('', '', '', '', '', '', 'true')
     .mustInputs();
 
   expect(inspection.check(message, inputNotCheckingBody)).toEqual([]);
@@ -81,7 +83,7 @@ it('reports missing body with disallowed one-liners.', () => {
 });
 
 it('reports missing body with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true', '', '', '').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '', '', '', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass\n';
   const errors = inspection.check(message, inputs);
@@ -168,7 +170,7 @@ it(
     'with additional verbs given as direct input.',
   () => {
     const inputs = input
-      .parseInputs('table', '', 'false', '', '', '')
+      .parseInputs('table', '', 'false', '', '', '', '')
       .mustInputs();
 
     const message =
@@ -242,7 +244,7 @@ it(
 
 it('accepts the subject starting with an additional verb.', () => {
   const inputs = input
-    .parseInputs('table', '', 'false', '', '', '')
+    .parseInputs('table', '', 'false', '', '', '', '')
     .mustInputs();
 
   const message = 'Table that for me\n\nThis is a dummy commit.';
@@ -265,7 +267,7 @@ it('reports the subject ending in a dot.', () => {
 });
 
 it('reports an incorrect one-line message with allowed one-liners.', () => {
-  const inputs = input.parseInputs('', '', 'true', '', '', '').mustInputs();
+  const inputs = input.parseInputs('', '', 'true', '', '', '', '').mustInputs();
 
   const message = 'Change SomeClass to OtherClass.';
 
@@ -298,7 +300,7 @@ it('reports too long a subject line with custom max length.', () => {
     'This replaces the SomeClass with OtherClass in all of the module\n' +
     'since Some class was deprecated.';
 
-  const inputs = input.parseInputs('', '', '', '60', '', '').mustInputs();
+  const inputs = input.parseInputs('', '', '', '60', '', '', '').mustInputs();
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([
@@ -332,7 +334,7 @@ it('reports too long a body line with custom max length.', () => {
     'This replaces the SomeClass with OtherClass in all of the module ' +
     'since Some class was deprecated.';
 
-  const inputs = input.parseInputs('', '', '', '', '90', '').mustInputs();
+  const inputs = input.parseInputs('', '', '', '', '90', '', '').mustInputs();
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([

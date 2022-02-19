@@ -325,7 +325,9 @@ export function check(message: string, inputs: input.Inputs): string[] {
       errors.push(...checkSubject(subjectBody.subject, inputs));
 
       if (!inputs.skipBodyCheck) {
-        errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines, inputs));
+        errors.push(
+          ...checkBody(subjectBody.subject, subjectBody.bodyLines, inputs)
+        );
       }
 
       if (inputs.enforceSignOff) {
