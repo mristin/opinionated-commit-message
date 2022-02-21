@@ -20,6 +20,14 @@ inputs:
     description: 'If set to "true", allows one-liner commit messages without body'
     required: false
     default: ''
+  max-subject-line-length:
+    description: 'Maximum length of the commit subject line'
+    required: false
+    default: ''
+  max-body-line-length:
+    description: 'Maximum length of a line in the body of the commit message'
+    required: false
+    default: ''
   enforce-sign-off:
     description: 'If set to "true", signed-off-by is required in the commit message body'
     required: false

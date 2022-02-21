@@ -34,6 +34,8 @@ it('parses the inputs.', () => {
     'integrate\nanalyze',
     pathToVerbs,
     'true',
+    '90',
+    '100',
     'true',
     'true'
   );
@@ -47,6 +49,8 @@ it('parses the inputs.', () => {
     new Set<string>(['rewrap', 'table', 'integrate', 'analyze'])
   );
   expect(inputs.allowOneLiners).toBeTruthy();
+  expect(inputs.maxSubjectLength).toEqual(90);
+  expect(inputs.maxBodyLineLength).toEqual(100);
   expect(inputs.enforceSignOff).toBeTruthy();
   expect(inputs.skipBodyCheck).toBeTruthy();
 });

@@ -4,6 +4,8 @@ export class Inputs {
   public hasAdditionalVerbsInput: boolean;
   public pathToAdditionalVerbs: string;
   public allowOneLiners: boolean;
+  public maxSubjectLength: number;
+  public maxBodyLineLength: number;
   public skipBodyCheck: boolean;
 
   // This is a complete appendix to the whiltelist parsed both from
@@ -18,6 +20,8 @@ export class Inputs {
     pathToAdditionalVerbs: string,
     allowOneLiners: boolean,
     additionalVerbs: Set<string>,
+    maxSubjectLength: number,
+    maxBodyLineLength: number,
     enforceSignOff: boolean,
     skipBodyCheck: boolean
   ) {
@@ -25,6 +29,8 @@ export class Inputs {
     this.pathToAdditionalVerbs = pathToAdditionalVerbs;
     this.allowOneLiners = allowOneLiners;
     this.additionalVerbs = additionalVerbs;
+    this.maxSubjectLength = maxSubjectLength;
+    this.maxBodyLineLength = maxBodyLineLength;
     this.enforceSignOff = enforceSignOff;
     this.skipBodyCheck = skipBodyCheck;
   }
@@ -64,6 +70,8 @@ export function parseInputs(
   additionalVerbsInput: string,
   pathToAdditionalVerbsInput: string,
   allowOneLinersInput: string,
+  maxSubjectLengthInput: string,
+  maxBodyLineLengthInput: string,
   enforceSignOffInput: string,
   skipBodyCheckInput: string
 ): MaybeInputs {
@@ -105,6 +113,30 @@ export function parseInputs(
     );
   }
 
+  const maxSubjectLength: number = !maxSubjectLengthInput
+    ? 50
+    : parseInt(maxSubjectLengthInput, 10);
+
+  if (Number.isNaN(maxSubjectLength)) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for max-subject-line-length. ' +
+        `Expected a number or nothing, got ${maxSubjectLengthInput}`
+    );
+  }
+
+  const maxBodyLineLength: number = !maxBodyLineLengthInput
+    ? 72
+    : parseInt(maxBodyLineLengthInput, 10);
+
+  if (Number.isNaN(maxBodyLineLength)) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for max-body-line-length. ' +
+        `Expected a number or nothing, got ${maxBodyLineLengthInput}`
+    );
+  }
+
   const enforceSignOff: boolean | null = !enforceSignOffInput
     ? false
     : parseBooleanFromString(enforceSignOffInput);
@@ -135,6 +167,8 @@ export function parseInputs(
       pathToAdditionalVerbsInput,
       allowOneLiners,
       additionalVerbs,
+      maxSubjectLength,
+      maxBodyLineLength,
       enforceSignOff,
       skipBodyCheck
     ),

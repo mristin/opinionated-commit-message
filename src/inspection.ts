@@ -151,9 +151,9 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
   // similar services.
   const subjectWoCode = subject.replace(suffixHashCodeRe, '');
 
-  if (subjectWoCode.length > 50) {
+  if (subjectWoCode.length > inputs.maxSubjectLength) {
     errors.push(
-      `The subject exceeds the limit of 50 characters ` +
+      `The subject exceeds the limit of ${inputs.maxSubjectLength} characters ` +
         `(got: ${subject.length}, JSON: ${JSON.stringify(subjectWoCode)}).` +
         'Please shorten the subject to make it more succinct.'
     );
@@ -209,7 +209,11 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
 const urlLineRe = new RegExp('^[^ ]+://[^ ]+$');
 const linkDefinitionRe = new RegExp('^\\[[^\\]]+]\\s*:\\s*[^ ]+://[^ ]+$');
 
-function checkBody(subject: string, bodyLines: string[]): string[] {
+function checkBody(
+  subject: string,
+  bodyLines: string[],
+  inputs: input.Inputs
+): string[] {
   const errors: string[] = [];
 
   if (bodyLines.length === 0) {
@@ -229,14 +233,14 @@ function checkBody(subject: string, bodyLines: string[]): string[] {
       continue;
     }
 
-    if (line.length > 72) {
+    if (line.length > inputs.maxBodyLineLength) {
       errors.push(
         `The line ${i + 3} of the message (line ${i + 1} of the body) ` +
-          'exceeds the limit of 72 characters. ' +
+          `exceeds the limit of ${inputs.maxBodyLineLength} characters. ` +
           `The line contains ${line.length} characters: ` +
           `${JSON.stringify(line)}. ` +
           'Please reformat the body so that all the lines fit ' +
-          '72 characters.'
+          `${inputs.maxBodyLineLength} characters.`
       );
     }
   }
@@ -321,7 +325,9 @@ export function check(message: string, inputs: input.Inputs): string[] {
       errors.push(...checkSubject(subjectBody.subject, inputs));
 
       if (!inputs.skipBodyCheck) {
-        errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+        errors.push(
+          ...checkBody(subjectBody.subject, subjectBody.bodyLines, inputs)
+        );
       }
 
       if (inputs.enforceSignOff) {

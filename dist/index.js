@@ -412,8 +412,8 @@ function checkSubject(subject, inputs) {
     // These hash codes are usually added automatically by GitHub and
     // similar services.
     const subjectWoCode = subject.replace(suffixHashCodeRe, '');
-    if (subjectWoCode.length > 50) {
-        errors.push(`The subject exceeds the limit of 50 characters ` +
+    if (subjectWoCode.length > inputs.maxSubjectLength) {
+        errors.push(`The subject exceeds the limit of ${inputs.maxSubjectLength} characters ` +
             `(got: ${subject.length}, JSON: ${JSON.stringify(subjectWoCode)}).` +
             'Please shorten the subject to make it more succinct.');
     }
@@ -454,7 +454,7 @@ function checkSubject(subject, inputs) {
 }
 const urlLineRe = new RegExp('^[^ ]+://[^ ]+$');
 const linkDefinitionRe = new RegExp('^\\[[^\\]]+]\\s*:\\s*[^ ]+://[^ ]+$');
-function checkBody(subject, bodyLines) {
+function checkBody(subject, bodyLines, inputs) {
     const errors = [];
     if (bodyLines.length === 0) {
         errors.push('At least one line is expected in the body, but got empty body.');
@@ -468,13 +468,13 @@ function checkBody(subject, bodyLines) {
         if (urlLineRe.test(line) || linkDefinitionRe.test(line)) {
             continue;
         }
-        if (line.length > 72) {
+        if (line.length > inputs.maxBodyLineLength) {
             errors.push(`The line ${i + 3} of the message (line ${i + 1} of the body) ` +
-                'exceeds the limit of 72 characters. ' +
+                `exceeds the limit of ${inputs.maxBodyLineLength} characters. ` +
                 `The line contains ${line.length} characters: ` +
                 `${JSON.stringify(line)}. ` +
                 'Please reformat the body so that all the lines fit ' +
-                '72 characters.');
+                `${inputs.maxBodyLineLength} characters.`);
         }
     }
     const bodyFirstWord = extractFirstWord(bodyLines[0]);
@@ -537,7 +537,7 @@ function check(message, inputs) {
             const subjectBody = maybeSubjectBody.subjectBody;
             errors.push(...checkSubject(subjectBody.subject, inputs));
             if (!inputs.skipBodyCheck) {
-                errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines));
+                errors.push(...checkBody(subjectBody.subject, subjectBody.bodyLines, inputs));
             }
             if (inputs.enforceSignOff) {
                 errors.push(...checkSignedOff(subjectBody.bodyLines));
@@ -1267,11 +1267,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseVerbs = exports.parseInputs = exports.MaybeInputs = exports.Inputs = void 0;
 const fs_1 = __importDefault(__webpack_require__(747));
 class Inputs {
-    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs, enforceSignOff, skipBodyCheck) {
+    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, skipBodyCheck) {
         this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
         this.pathToAdditionalVerbs = pathToAdditionalVerbs;
         this.allowOneLiners = allowOneLiners;
         this.additionalVerbs = additionalVerbs;
+        this.maxSubjectLength = maxSubjectLength;
+        this.maxBodyLineLength = maxBodyLineLength;
         this.enforceSignOff = enforceSignOff;
         this.skipBodyCheck = skipBodyCheck;
     }
@@ -1297,7 +1299,7 @@ class MaybeInputs {
     }
 }
 exports.MaybeInputs = MaybeInputs;
-function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, enforceSignOffInput, skipBodyCheckInput) {
+function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, skipBodyCheckInput) {
     const additionalVerbs = new Set();
     const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
     if (additionalVerbsInput) {
@@ -1322,6 +1324,20 @@ function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneL
         return new MaybeInputs(null, 'Unexpected value for allow-one-liners. ' +
             `Expected either 'true' or 'false', got: ${allowOneLinersInput}`);
     }
+    const maxSubjectLength = !maxSubjectLengthInput
+        ? 50
+        : parseInt(maxSubjectLengthInput, 10);
+    if (Number.isNaN(maxSubjectLength)) {
+        return new MaybeInputs(null, 'Unexpected value for max-subject-line-length. ' +
+            `Expected a number or nothing, got ${maxSubjectLengthInput}`);
+    }
+    const maxBodyLineLength = !maxBodyLineLengthInput
+        ? 72
+        : parseInt(maxBodyLineLengthInput, 10);
+    if (Number.isNaN(maxBodyLineLength)) {
+        return new MaybeInputs(null, 'Unexpected value for max-body-line-length. ' +
+            `Expected a number or nothing, got ${maxBodyLineLengthInput}`);
+    }
     const enforceSignOff = !enforceSignOffInput
         ? false
         : parseBooleanFromString(enforceSignOffInput);
@@ -1336,7 +1352,7 @@ function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneL
         return new MaybeInputs(null, 'Unexpected value for skip-body-check. ' +
             `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`);
     }
-    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs, enforceSignOff, skipBodyCheck), null);
+    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, skipBodyCheck), null);
 }
 exports.parseInputs = parseInputs;
 function parseVerbs(text) {
@@ -1734,7 +1750,7 @@ const inspection = __importStar(__webpack_require__(117));
 const represent = __importStar(__webpack_require__(110));
 const input = __importStar(__webpack_require__(265));
 function runWithExceptions() {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f, _g;
     const messages = commitMessages.retrieve();
     ////
     // Parse inputs
@@ -1742,9 +1758,11 @@ function runWithExceptions() {
     const additionalVerbsInput = (_a = core.getInput('additional-verbs', { required: false })) !== null && _a !== void 0 ? _a : '';
     const pathToAdditionalVerbsInput = (_b = core.getInput('path-to-additional-verbs', { required: false })) !== null && _b !== void 0 ? _b : '';
     const allowOneLinersInput = (_c = core.getInput('allow-one-liners', { required: false })) !== null && _c !== void 0 ? _c : '';
-    const enforceSignOffInput = (_d = core.getInput('enforce-sign-off', { required: false })) !== null && _d !== void 0 ? _d : '';
-    const skipBodyCheckInput = (_e = core.getInput('skip-body-check', { required: false })) !== null && _e !== void 0 ? _e : '';
-    const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, enforceSignOffInput, skipBodyCheckInput);
+    const maxSubjectLengthInput = (_d = core.getInput('max-subject-line-length', { required: false })) !== null && _d !== void 0 ? _d : '';
+    const maxBodyLineLengthInput = (_e = core.getInput('max-body-line-length', { required: false })) !== null && _e !== void 0 ? _e : '';
+    const enforceSignOffInput = (_f = core.getInput('enforce-sign-off', { required: false })) !== null && _f !== void 0 ? _f : '';
+    const skipBodyCheckInput = (_g = core.getInput('skip-body-check', { required: false })) !== null && _g !== void 0 ? _g : '';
+    const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, skipBodyCheckInput);
     if (maybeInputs.error !== null) {
         core.error(maybeInputs.error);
         core.setFailed(maybeInputs.error);

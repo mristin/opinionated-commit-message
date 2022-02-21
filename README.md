@@ -158,6 +158,38 @@ You can allow one-liner commit messages by setting the flag `allow-one-liners`:
           allow-one-liners: 'true'
 ```
 
+## Custom subject length
+
+For use in terminals and monospaced GUIs it is a good practice to limit length of the subject to 50 characters.
+For some projects, though, this limit is too restrictive.
+For example, if you include tags in the subject (such as `[FIX]`) there is not much space left for the actual subject.
+
+You can change the imposed maximum subject length by setting the flag `max-subject-line-length`:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v2
+        with:
+          max-subject-line-length: '100'
+```
+
+## Custom line length on the body
+
+Similar to the subject line, for terminals and monospaced GUIs it is a good practice to limit the line length of the body to 72 characters.
+However, the restriction is unnecessarily harsh for teams that use modern GUIs such as GitHub Web.
+This is especially so when using a description of the pull request as the body, since there is no such limitation in the GitHub UI itself.
+
+You can change the imposed maximum line length by setting the flag `max-body-line-length`:
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v2
+        with:
+          max-body-line-length: '100'
+```
+
 ## Skip Body Check
 
 For some repositories only the subject matters while the body is allowed to be free-form.
