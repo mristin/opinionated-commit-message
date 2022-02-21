@@ -161,6 +161,8 @@ You can allow one-liner commit messages by setting the flag `allow-one-liners`:
 ## Custom subject length
 
 For use in terminals and monospaced GUIs it is a good practice to limit length of the subject to 50 characters.
+For some projects, though, this limit is too restrictive.
+For example, if you include tags in the subject (such as `[FIX]`) there is not much space left for the actual subject.
 
 You can change the imposed maximum subject length by setting the flag `max-subject-line-length`:
 
