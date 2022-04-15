@@ -246,6 +246,7 @@ export const SET = new Set([
   'experience',
   'explain',
   'explore',
+  'expose',
   'express',
   'extend',
   'face',
