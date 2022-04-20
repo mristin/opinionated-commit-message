@@ -6632,6 +6632,7 @@ exports.SET = new Set([
     'experience',
     'explain',
     'explore',
+    'expose',
     'express',
     'extend',
     'face',
@@ -7158,7 +7159,8 @@ exports.SET = new Set([
     'optimize',
     'optimise',
     'default',
-    'patch'
+    'patch',
+    'group'
 ]);
 
 

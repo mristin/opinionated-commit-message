@@ -774,5 +774,6 @@ export const SET = new Set([
   'optimize',
   'optimise',
   'default',
-  'patch'
+  'patch',
+  'group'
 ]);
