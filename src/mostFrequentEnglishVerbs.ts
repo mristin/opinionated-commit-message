@@ -609,6 +609,7 @@ export const SET = new Set([
   'trade',
   'train',
   'transfer',
+  'transform',
   'travel',
   'tread',
   'treat',
