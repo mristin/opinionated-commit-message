@@ -1,0 +1,12 @@
+name: "e2e-test-sign-off-enforcement"
+on: [push]
+
+jobs:
+  test-sign-off-enforcement-fires:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v1
+
+        - uses: ./
+          with:
+            enforce-sign-off: 'true'
