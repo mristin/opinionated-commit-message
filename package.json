@@ -38,7 +38,7 @@
     "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
   },
   "dependencies": {
-    "@actions/core": "^1.6.0",
+    "@actions/core": "^1.9.1",
     "@actions/github": "^5.0.0"
   },
   "devDependencies": {
