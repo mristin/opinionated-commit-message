@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.0
+        uses: mristin/opinionated-commit-message@v3.0.1
 ```
 
 ## Checked Events
@@ -99,7 +99,7 @@ string in the workflow file. For example:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.0
+        uses: mristin/opinionated-commit-message@v3.0.1
         with:
           additional-verbs: 'chrusimusi, unit-test'
 ```
@@ -111,7 +111,7 @@ as input:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.0
+        uses: mristin/opinionated-commit-message@v3.0.1
         with:
           path-to-additional-verbs: 'src/additional-verbs.txt'
 ```
@@ -153,7 +153,7 @@ You can allow one-liner commit messages by setting the flag `allow-one-liners`:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.0
+        uses: mristin/opinionated-commit-message@v3.0.1
         with:
           allow-one-liners: 'true'
 ```
@@ -219,7 +219,7 @@ We provide an `enforce-sign-off` flag so that you can enforce the sign-off in th
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.0
+        uses: mristin/opinionated-commit-message@v3.0.1
         with:
           enforce-sign-off: 'true'
 ```
@@ -239,7 +239,7 @@ workflow on the push as well. GitHub does not include the content of commit
 messages in the context payload, so checking all the commit messages of 
 the pull request would involve various API call and additional complexity.
 
-To overcome this issue, run opinionanted-commit-message both on `pull_request`
+To overcome this issue, run opinionated-commit-message both on `pull_request`
 and `push`. Please upvote [this issue](
 https://github.com/mristin/opinionated-commit-message/issues/28
 ) to signal the visibility and so that we could judge when this feature merits 
