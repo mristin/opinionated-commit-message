@@ -32638,15 +32638,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseVerbs = exports.parseInputs = exports.MaybeInputs = exports.Inputs = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 class Inputs {
-    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, skipBodyCheck) {
-        this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
-        this.pathToAdditionalVerbs = pathToAdditionalVerbs;
-        this.allowOneLiners = allowOneLiners;
-        this.additionalVerbs = additionalVerbs;
-        this.maxSubjectLength = maxSubjectLength;
-        this.maxBodyLineLength = maxBodyLineLength;
-        this.enforceSignOff = enforceSignOff;
-        this.skipBodyCheck = skipBodyCheck;
+    constructor(values) {
+        this.hasAdditionalVerbsInput = values.hasAdditionalVerbsInput;
+        this.pathToAdditionalVerbs = values.pathToAdditionalVerbs;
+        this.allowOneLiners = values.allowOneLiners;
+        this.additionalVerbs = values.additionalVerbs;
+        this.maxSubjectLength = values.maxSubjectLength;
+        this.maxBodyLineLength = values.maxBodyLineLength;
+        this.enforceSignOff = values.enforceSignOff;
+        this.skipBodyCheck = values.skipBodyCheck;
     }
 }
 exports.Inputs = Inputs;
@@ -32670,7 +32670,8 @@ class MaybeInputs {
     }
 }
 exports.MaybeInputs = MaybeInputs;
-function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, skipBodyCheckInput) {
+function parseInputs(rawInputs) {
+    const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', skipBodyCheckInput = '' } = rawInputs;
     const additionalVerbs = new Set();
     const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
     if (additionalVerbsInput) {
@@ -32723,7 +32724,16 @@ function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneL
         return new MaybeInputs(null, 'Unexpected value for skip-body-check. ' +
             `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`);
     }
-    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, skipBodyCheck), null);
+    return new MaybeInputs(new Inputs({
+        hasAdditionalVerbsInput,
+        pathToAdditionalVerbs: pathToAdditionalVerbsInput,
+        allowOneLiners,
+        additionalVerbs,
+        maxSubjectLength,
+        maxBodyLineLength,
+        enforceSignOff,
+        skipBodyCheck
+    }), null);
 }
 exports.parseInputs = parseInputs;
 function parseVerbs(text) {
@@ -33103,19 +33113,40 @@ const inspection = __importStar(__nccwpck_require__(7647));
 const represent = __importStar(__nccwpck_require__(4478));
 const input = __importStar(__nccwpck_require__(6747));
 function runWithExceptions() {
-    var _a, _b, _c, _d, _e, _f, _g;
     const messages = commitMessages.retrieve();
     ////
     // Parse inputs
     ////
-    const additionalVerbsInput = (_a = core.getInput('additional-verbs', { required: false })) !== null && _a !== void 0 ? _a : '';
-    const pathToAdditionalVerbsInput = (_b = core.getInput('path-to-additional-verbs', { required: false })) !== null && _b !== void 0 ? _b : '';
-    const allowOneLinersInput = (_c = core.getInput('allow-one-liners', { required: false })) !== null && _c !== void 0 ? _c : '';
-    const maxSubjectLengthInput = (_d = core.getInput('max-subject-line-length', { required: false })) !== null && _d !== void 0 ? _d : '';
-    const maxBodyLineLengthInput = (_e = core.getInput('max-body-line-length', { required: false })) !== null && _e !== void 0 ? _e : '';
-    const enforceSignOffInput = (_f = core.getInput('enforce-sign-off', { required: false })) !== null && _f !== void 0 ? _f : '';
-    const skipBodyCheckInput = (_g = core.getInput('skip-body-check', { required: false })) !== null && _g !== void 0 ? _g : '';
-    const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, skipBodyCheckInput);
+    const additionalVerbsInput = core.getInput('additional-verbs', {
+        required: false
+    });
+    const pathToAdditionalVerbsInput = core.getInput('path-to-additional-verbs', {
+        required: false
+    });
+    const allowOneLinersInput = core.getInput('allow-one-liners', {
+        required: false
+    });
+    const maxSubjectLengthInput = core.getInput('max-subject-line-length', {
+        required: false
+    });
+    const maxBodyLineLengthInput = core.getInput('max-body-line-length', {
+        required: false
+    });
+    const enforceSignOffInput = core.getInput('enforce-sign-off', {
+        required: false
+    });
+    const skipBodyCheckInput = core.getInput('skip-body-check', {
+        required: false
+    });
+    const maybeInputs = input.parseInputs({
+        additionalVerbsInput,
+        pathToAdditionalVerbsInput,
+        allowOneLinersInput,
+        maxSubjectLengthInput,
+        maxBodyLineLengthInput,
+        enforceSignOffInput,
+        skipBodyCheckInput
+    });
     if (maybeInputs.error !== null) {
         core.error(maybeInputs.error);
         core.setFailed(maybeInputs.error);

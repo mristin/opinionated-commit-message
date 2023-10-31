@@ -30,15 +30,15 @@ it('parses the inputs.', () => {
     throw new Error(`Unexpected readFileSync in the unit test from: ${path}`);
   };
 
-  const maybeInputs = input.parseInputs(
-    'integrate\nanalyze',
-    pathToVerbs,
-    'true',
-    '90',
-    '100',
-    'true',
-    'true'
-  );
+  const maybeInputs = input.parseInputs({
+    additionalVerbsInput: 'integrate\nanalyze',
+    pathToAdditionalVerbsInput: pathToVerbs,
+    allowOneLinersInput: 'true',
+    maxSubjectLengthInput: '90',
+    maxBodyLineLengthInput: '100',
+    enforceSignOffInput: 'true',
+    skipBodyCheckInput: 'true',
+  });
 
   expect(maybeInputs.error).toBeNull();
 

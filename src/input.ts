@@ -1,6 +1,17 @@
 import fs from 'fs';
 
-export class Inputs {
+interface InputValues {
+  hasAdditionalVerbsInput: boolean;
+  pathToAdditionalVerbs: string;
+  allowOneLiners: boolean;
+  additionalVerbs: Set<string>;
+  maxSubjectLength: number;
+  maxBodyLineLength: number;
+  enforceSignOff: boolean;
+  skipBodyCheck: boolean;
+}
+
+export class Inputs implements InputValues {
   public hasAdditionalVerbsInput: boolean;
   public pathToAdditionalVerbs: string;
   public allowOneLiners: boolean;
@@ -8,31 +19,22 @@ export class Inputs {
   public maxBodyLineLength: number;
   public skipBodyCheck: boolean;
 
-  // This is a complete appendix to the whiltelist parsed both from
+  // This is a complete appendix to the whitelist parsed both from
   // the GitHub action input "additional-verbs" and from the file
   // specified by the input "path-to-additional-verbs".
   additionalVerbs: Set<string>;
 
   public enforceSignOff: boolean;
 
-  constructor(
-    hasAdditionalVerbsInput: boolean,
-    pathToAdditionalVerbs: string,
-    allowOneLiners: boolean,
-    additionalVerbs: Set<string>,
-    maxSubjectLength: number,
-    maxBodyLineLength: number,
-    enforceSignOff: boolean,
-    skipBodyCheck: boolean
-  ) {
-    this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
-    this.pathToAdditionalVerbs = pathToAdditionalVerbs;
-    this.allowOneLiners = allowOneLiners;
-    this.additionalVerbs = additionalVerbs;
-    this.maxSubjectLength = maxSubjectLength;
-    this.maxBodyLineLength = maxBodyLineLength;
-    this.enforceSignOff = enforceSignOff;
-    this.skipBodyCheck = skipBodyCheck;
+  constructor(values: InputValues) {
+    this.hasAdditionalVerbsInput = values.hasAdditionalVerbsInput;
+    this.pathToAdditionalVerbs = values.pathToAdditionalVerbs;
+    this.allowOneLiners = values.allowOneLiners;
+    this.additionalVerbs = values.additionalVerbs;
+    this.maxSubjectLength = values.maxSubjectLength;
+    this.maxBodyLineLength = values.maxBodyLineLength;
+    this.enforceSignOff = values.enforceSignOff;
+    this.skipBodyCheck = values.skipBodyCheck;
   }
 }
 
@@ -66,15 +68,27 @@ export class MaybeInputs {
   }
 }
 
-export function parseInputs(
-  additionalVerbsInput: string,
-  pathToAdditionalVerbsInput: string,
-  allowOneLinersInput: string,
-  maxSubjectLengthInput: string,
-  maxBodyLineLengthInput: string,
-  enforceSignOffInput: string,
-  skipBodyCheckInput: string
-): MaybeInputs {
+interface RawInputs {
+  additionalVerbsInput?: string;
+  pathToAdditionalVerbsInput?: string;
+  allowOneLinersInput?: string;
+  maxSubjectLengthInput?: string;
+  maxBodyLineLengthInput?: string;
+  enforceSignOffInput?: string;
+  skipBodyCheckInput?: string;
+}
+
+export function parseInputs(rawInputs: RawInputs): MaybeInputs {
+  const {
+    additionalVerbsInput = '',
+    pathToAdditionalVerbsInput = '',
+    allowOneLinersInput = '',
+    maxSubjectLengthInput = '',
+    maxBodyLineLengthInput = '',
+    enforceSignOffInput = '',
+    skipBodyCheckInput = ''
+  } = rawInputs;
+
   const additionalVerbs = new Set<string>();
 
   const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
@@ -162,16 +176,16 @@ export function parseInputs(
   }
 
   return new MaybeInputs(
-    new Inputs(
+    new Inputs({
       hasAdditionalVerbsInput,
-      pathToAdditionalVerbsInput,
+      pathToAdditionalVerbs: pathToAdditionalVerbsInput,
       allowOneLiners,
       additionalVerbs,
       maxSubjectLength,
       maxBodyLineLength,
       enforceSignOff,
       skipBodyCheck
-    ),
+    }),
     null
   );
 }
