@@ -87,7 +87,13 @@ export function run(): void {
   try {
     runWithExceptions();
   } catch (error) {
-    core.error(error);
-    core.setFailed(error.message);
+    if (error instanceof Error) {
+      core.error(error);
+      core.setFailed(error.message);
+    } else {
+      const message = `Unexpected error value: ${error}`;
+      core.error(message);
+      core.setFailed(message);
+    }
   }
 }
