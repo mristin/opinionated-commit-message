@@ -32572,6 +32572,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.retrieve = void 0;
 const github = __importStar(__nccwpck_require__(5438));
@@ -32583,45 +32592,74 @@ const github = __importStar(__nccwpck_require__(5438));
  *
  * @returns   string[]
  */
-function retrieve() {
+function retrieve(inputs, token) {
     var _a, _b;
-    const result = [];
-    switch (github.context.eventName) {
-        case 'pull_request': {
-            const pullRequest = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
-            if (pullRequest) {
-                let msg = pullRequest.title;
-                if (pullRequest.body) {
-                    msg = msg.concat('\n\n', pullRequest.body);
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = [];
+        switch (github.context.eventName) {
+            case 'pull_request': {
+                const pullRequest = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
+                if (pullRequest) {
+                    return extractMessagesFromPullRequest(
+                    // Action payloads are the same as WebHook payloads, so cast is safe.
+                    pullRequest, inputs, token);
                 }
-                result.push(msg);
+                else {
+                    throw new Error(`No pull_request found in the payload.`);
+                }
+                break;
             }
-            else {
-                throw new Error(`No pull_request found in the payload.`);
-            }
-            break;
-        }
-        case 'push': {
-            const commits = (_b = github.context.payload) === null || _b === void 0 ? void 0 : _b.commits;
-            if (commits) {
-                for (const commit of commits) {
-                    if (commit.message) {
-                        result.push(commit.message);
+            case 'push': {
+                const commits = (_b = github.context.payload) === null || _b === void 0 ? void 0 : _b.commits;
+                if (commits) {
+                    for (const commit of commits) {
+                        if (commit.message) {
+                            result.push(commit.message);
+                        }
                     }
                 }
+                if (result.length === 0) {
+                    throw new Error(`No commits found in the payload.`);
+                }
+                break;
             }
-            if (result.length === 0) {
-                throw new Error(`No commits found in the payload.`);
+            default: {
+                throw new Error(`Unhandled event: ${github.context.eventName}`);
             }
-            break;
         }
-        default: {
-            throw new Error(`Unhandled event: ${github.context.eventName}`);
-        }
-    }
-    return result;
+        return result;
+    });
 }
 exports.retrieve = retrieve;
+function extractMessagesFromPullRequest(pullRequest, inputs, token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!inputs.validatePullRequestCommits) {
+            let msg = pullRequest.title;
+            if (pullRequest.body) {
+                msg = msg.concat('\n\n', pullRequest.body);
+            }
+            return [msg];
+        }
+        return getCommits(pullRequest, token);
+    });
+}
+function getCommits(pullRequest, token) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        // Head repository where commits are registered. Value is null when the PR within a single repository,
+        // in which use base repository instead.
+        const repo = (_a = pullRequest.head.repo) !== null && _a !== void 0 ? _a : pullRequest.base.repo;
+        if (repo.private && token === undefined) {
+            throw new Error('GitHub token is required to validate pull request commits on private repository.');
+        }
+        const octokit = github.getOctokit(token !== null && token !== void 0 ? token : '');
+        const commits = yield octokit.request({
+            method: 'GET',
+            url: pullRequest.commits_url,
+        });
+        return commits.data.map(({ commit }) => commit.message);
+    });
+}
 
 
 /***/ }),
@@ -32646,6 +32684,7 @@ class Inputs {
         this.maxSubjectLength = values.maxSubjectLength;
         this.maxBodyLineLength = values.maxBodyLineLength;
         this.enforceSignOff = values.enforceSignOff;
+        this.validatePullRequestCommits = values.validatePullRequestCommits;
         this.skipBodyCheck = values.skipBodyCheck;
     }
 }
@@ -32671,7 +32710,7 @@ class MaybeInputs {
 }
 exports.MaybeInputs = MaybeInputs;
 function parseInputs(rawInputs) {
-    const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', skipBodyCheckInput = '' } = rawInputs;
+    const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', validatePullRequestCommitsInput = '', skipBodyCheckInput = '', } = rawInputs;
     const additionalVerbs = new Set();
     const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
     if (additionalVerbsInput) {
@@ -32717,6 +32756,13 @@ function parseInputs(rawInputs) {
         return new MaybeInputs(null, 'Unexpected value for enforce-sign-off. ' +
             `Expected either 'true' or 'false', got: ${enforceSignOffInput}`);
     }
+    const validatePullRequestCommits = !validatePullRequestCommitsInput
+        ? false
+        : parseBooleanFromString(validatePullRequestCommitsInput);
+    if (validatePullRequestCommits === null) {
+        return new MaybeInputs(null, 'Unexpected value for validate-pull-request-commits. ' +
+            `Expected either 'true' or 'false', got: ${validatePullRequestCommitsInput}`);
+    }
     const skipBodyCheck = !skipBodyCheckInput
         ? false
         : parseBooleanFromString(skipBodyCheckInput);
@@ -32732,7 +32778,8 @@ function parseInputs(rawInputs) {
         maxSubjectLength,
         maxBodyLineLength,
         enforceSignOff,
-        skipBodyCheck
+        validatePullRequestCommits,
+        skipBodyCheck,
     }), null);
 }
 exports.parseInputs = parseInputs;
@@ -32855,7 +32902,7 @@ function errorMessageOnNonVerb(firstWord, inputs) {
             'Whether the word is in imperative mood is determined by ' +
             'whitelisting. The general whitelist is available at ' +
             'https://github.com/mristin/opinionated-commit-message/' +
-            'blob/master/src/mostFrequentEnglishVerbs.ts.'
+            'blob/master/src/mostFrequentEnglishVerbs.ts.',
     ];
     if (!inputs.hasAdditionalVerbsInput) {
         parts.push('You can whitelist additional verbs using ' +
@@ -33105,6 +33152,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
@@ -33113,84 +33169,89 @@ const inspection = __importStar(__nccwpck_require__(7647));
 const represent = __importStar(__nccwpck_require__(4478));
 const input = __importStar(__nccwpck_require__(6747));
 function runWithExceptions() {
-    const messages = commitMessages.retrieve();
-    ////
-    // Parse inputs
-    ////
-    const additionalVerbsInput = core.getInput('additional-verbs', {
-        required: false
-    });
-    const pathToAdditionalVerbsInput = core.getInput('path-to-additional-verbs', {
-        required: false
-    });
-    const allowOneLinersInput = core.getInput('allow-one-liners', {
-        required: false
-    });
-    const maxSubjectLengthInput = core.getInput('max-subject-line-length', {
-        required: false
-    });
-    const maxBodyLineLengthInput = core.getInput('max-body-line-length', {
-        required: false
-    });
-    const enforceSignOffInput = core.getInput('enforce-sign-off', {
-        required: false
-    });
-    const skipBodyCheckInput = core.getInput('skip-body-check', {
-        required: false
-    });
-    const maybeInputs = input.parseInputs({
-        additionalVerbsInput,
-        pathToAdditionalVerbsInput,
-        allowOneLinersInput,
-        maxSubjectLengthInput,
-        maxBodyLineLengthInput,
-        enforceSignOffInput,
-        skipBodyCheckInput
-    });
-    if (maybeInputs.error !== null) {
-        core.error(maybeInputs.error);
-        core.setFailed(maybeInputs.error);
-        return;
-    }
-    const inputs = maybeInputs.mustInputs();
-    ////
-    // Inspect
-    ////
-    // Parts of the error message to be concatenated with '\n'
-    const parts = [];
-    for (const [messageIndex, message] of messages.entries()) {
-        const errors = inspection.check(message, inputs);
-        if (errors.length > 0) {
-            const repr = represent.formatErrors(message, messageIndex, errors);
-            parts.push(repr);
+    return __awaiter(this, void 0, void 0, function* () {
+        ////
+        // Parse inputs
+        ////
+        const additionalVerbsInput = core.getInput('additional-verbs', {
+            required: false,
+        });
+        const pathToAdditionalVerbsInput = core.getInput('path-to-additional-verbs', {
+            required: false,
+        });
+        const allowOneLinersInput = core.getInput('allow-one-liners', {
+            required: false,
+        });
+        const maxSubjectLengthInput = core.getInput('max-subject-line-length', {
+            required: false,
+        });
+        const maxBodyLineLengthInput = core.getInput('max-body-line-length', {
+            required: false,
+        });
+        const enforceSignOffInput = core.getInput('enforce-sign-off', {
+            required: false,
+        });
+        const validatePullRequestCommitsInput = core.getInput('validate-pull-request-commits', {
+            required: false,
+        });
+        const skipBodyCheckInput = core.getInput('skip-body-check', {
+            required: false,
+        });
+        const maybeInputs = input.parseInputs({
+            additionalVerbsInput,
+            pathToAdditionalVerbsInput,
+            allowOneLinersInput,
+            maxSubjectLengthInput,
+            maxBodyLineLengthInput,
+            enforceSignOffInput,
+            validatePullRequestCommitsInput,
+            skipBodyCheckInput,
+        });
+        if (maybeInputs.error !== null) {
+            core.error(maybeInputs.error);
+            core.setFailed(maybeInputs.error);
+            return;
         }
-        else {
-            core.info(`The message is OK:\n---\n${message}\n---`);
+        const inputs = maybeInputs.mustInputs();
+        const messages = yield commitMessages.retrieve(inputs, core.getInput('github-token', { required: false }));
+        ////
+        // Inspect
+        ////
+        // Parts of the error message to be concatenated with '\n'
+        const parts = [];
+        for (const [messageIndex, message] of messages.entries()) {
+            const errors = inspection.check(message, inputs);
+            if (errors.length > 0) {
+                const repr = represent.formatErrors(message, messageIndex, errors);
+                parts.push(repr);
+            }
+            else {
+                core.info(`The message is OK:\n---\n${message}\n---`);
+            }
         }
-    }
-    const errorMessage = parts.join('\n');
-    if (errorMessage.length > 0) {
-        core.setFailed(errorMessage);
-    }
+        const errorMessage = parts.join('\n');
+        if (errorMessage.length > 0) {
+            core.setFailed(errorMessage);
+        }
+    });
 }
 /**
  * Main function
  */
 function run() {
-    try {
-        runWithExceptions();
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            core.error(error);
-            core.setFailed(error.message);
-        }
-        else {
-            const message = `Unexpected error value: ${error}`;
-            core.error(message);
-            core.setFailed(message);
-        }
-    }
+    return __awaiter(this, void 0, void 0, function* () {
+        return runWithExceptions().catch(error => {
+            if (error instanceof Error) {
+                core.error(error);
+                core.setFailed(error.message);
+            }
+            else {
+                const message = `Unexpected error value: ${error}`;
+                core.error(message);
+                core.setFailed(message);
+            }
+        });
+    });
 }
 exports.run = run;
 
@@ -33981,7 +34042,7 @@ exports.SET = new Set([
     'upgrade',
     'verbosify',
     'whitelist',
-    'wrap'
+    'wrap',
 ]);
 
 

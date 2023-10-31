@@ -776,5 +776,5 @@ export const SET = new Set([
   'upgrade',
   'verbosify',
   'whitelist',
-  'wrap'
+  'wrap',
 ]);

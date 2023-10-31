@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - dev
+      - check-all-commits
 
 jobs:
   build:
@@ -26,6 +27,15 @@ jobs:
         with:
           additional-verbs: 'chrusimusi, unit-test'
           path-to-additional-verbs: src/additional-verbs.txt
+
+#  test-pr-commits:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: ./
+#        with:
+#          validate-pull-request-commits: true
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   test-allow-one-liners:
     runs-on: ubuntu-latest
