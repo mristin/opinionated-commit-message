@@ -12,28 +12,35 @@ function runWithExceptions(): void {
   // Parse inputs
   ////
 
-  const additionalVerbsInput =
-    core.getInput('additional-verbs', {required: false}) ?? '';
+  const additionalVerbsInput = core.getInput('additional-verbs', {
+    required: false
+  });
 
-  const pathToAdditionalVerbsInput =
-    core.getInput('path-to-additional-verbs', {required: false}) ?? '';
+  const pathToAdditionalVerbsInput = core.getInput('path-to-additional-verbs', {
+    required: false
+  });
 
-  const allowOneLinersInput =
-    core.getInput('allow-one-liners', {required: false}) ?? '';
+  const allowOneLinersInput = core.getInput('allow-one-liners', {
+    required: false
+  });
 
-  const maxSubjectLengthInput =
-    core.getInput('max-subject-line-length', {required: false}) ?? '';
+  const maxSubjectLengthInput = core.getInput('max-subject-line-length', {
+    required: false
+  });
 
-  const maxBodyLineLengthInput =
-    core.getInput('max-body-line-length', {required: false}) ?? '';
+  const maxBodyLineLengthInput = core.getInput('max-body-line-length', {
+    required: false
+  });
 
-  const enforceSignOffInput =
-    core.getInput('enforce-sign-off', {required: false}) ?? '';
+  const enforceSignOffInput = core.getInput('enforce-sign-off', {
+    required: false
+  });
 
-  const skipBodyCheckInput =
-    core.getInput('skip-body-check', {required: false}) ?? '';
+  const skipBodyCheckInput = core.getInput('skip-body-check', {
+    required: false
+  });
 
-  const maybeInputs = input.parseInputs(
+  const maybeInputs = input.parseInputs({
     additionalVerbsInput,
     pathToAdditionalVerbsInput,
     allowOneLinersInput,
@@ -41,7 +48,7 @@ function runWithExceptions(): void {
     maxBodyLineLengthInput,
     enforceSignOffInput,
     skipBodyCheckInput
-  );
+  });
 
   if (maybeInputs.error !== null) {
     core.error(maybeInputs.error);
