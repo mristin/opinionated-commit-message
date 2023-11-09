@@ -278,19 +278,6 @@ Signed-off-by: Some Body <some@body.com>
 
 You usually sign off the commits using `git commit --signoff`. 
 
-## Known Issue
-
-Commit messages of the pull request are not verified unless you trigger the 
-workflow on the push as well. GitHub does not include the content of commit 
-messages in the context payload, so checking all the commit messages of 
-the pull request would involve various API call and additional complexity.
-
-To overcome this issue, run opinionated-commit-message both on `pull_request`
-and `push`. Please upvote [this issue](
-https://github.com/mristin/opinionated-commit-message/issues/28
-) to signal the visibility and so that we could judge when this feature merits 
-the effort.
-
 ## Contributing
 
 If you would like to report bugs or request a feature, please create 
