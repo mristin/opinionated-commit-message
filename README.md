@@ -206,6 +206,53 @@ You can disable checking the body by setting the flag `skip-body-check`:
           skip-body-check: 'true'
 ```
 
+## Validating PR commit messages
+
+When triggered by a `pull_request` event, the action checks the title and the
+body of the pull request by default. GitHub does not include the content of the
+commit message in the workflow context, so checking all the commit messages of
+the PR requires additional API calls. If you want to check the commit messages
+for pull requests you can either:
+
+- Trigger the action on `push` events. This will check the commit messages of
+  each pushed commit, but it will run even for branches that do not have a PR 
+  associated with them.
+- Set the `validate-pull-request-commits` option to `true`. This will check the
+  messages of every commit in the PR. However, because it requires extra API calls
+  to retrieve the commit messages, setting this on option on _private_ repositories
+  require a GitHub token with at least `read` permission on the `contents` scope.
+  See the [GitHub documentation](https://docs.github.com/en/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token).
+
+```yaml
+    steps:
+      - name: Check
+        uses: mristin/opinionated-commit-message@v3.0.1
+        with:
+          validate-pull-request-commits: 'true'
+          # Required for private repos
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+> [!NOTE]
+> The default permissions for a GitHub Actions workflow is sufficient for this action to work.
+> You only need to check permissions if you are already customizing the permissions of the workflow
+> 
+> ```yaml
+> jobs:
+>   check-commits:
+>     # If you have this line,
+>     permissions:
+>       # Make sure this you also have this line
+>       contents: read
+>     steps:
+>       - name: Check
+>         uses: mristin/opinionated-commit-message@v3.0.1
+>         with:
+>           validate-pull-request-commits: 'true'
+>           # Required for private repos
+>           github-token: ${{ secrets.GITHUB_TOKEN }}
+> ```
+
 ## Enforce Sign-off
 
 Most projects do not require a sign-off on the commits.
