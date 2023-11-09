@@ -221,7 +221,6 @@ for pull requests you can either:
   messages of every commit in the PR. However, because it requires extra API calls
   to retrieve the commit messages, setting this on option on _private_ repositories
   require a GitHub token with at least `read` permission on the `contents` scope.
-  See the [GitHub documentation](https://docs.github.com/en/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token).
 
 ```yaml
     steps:
@@ -233,25 +232,25 @@ for pull requests you can either:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-> [!NOTE]
-> The default permissions for a GitHub Actions workflow is sufficient for this action to work.
-> You only need to check permissions if you are already customizing the permissions of the workflow
-> 
-> ```yaml
-> jobs:
->   check-commits:
->     # If you have this line,
->     permissions:
->       # Make sure this you also have this line
->       contents: read
->     steps:
->       - name: Check
->         uses: mristin/opinionated-commit-message@v3.0.1
->         with:
->           validate-pull-request-commits: 'true'
->           # Required for private repos
->           github-token: ${{ secrets.GITHUB_TOKEN }}
-> ```
+#### Permissions
+
+The default permissions for a GitHub Actions workflow is sufficient for this action to work.
+You only need to check permissions if you are already customizing the permissions of the workflow
+See the [GitHub documentation](https://docs.github.com/en/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token).
+
+```yaml
+jobs:
+  check-commits:
+    # If you have this line,
+    permissions:
+      # Make sure this you also have this line
+      contents: read
+    steps:
+      - uses: mristin/opinionated-commit-message@v3.0.1
+        with:
+          validate-pull-request-commits: 'true'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
 
 ## Enforce Sign-off
 
