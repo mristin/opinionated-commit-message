@@ -36,3 +36,11 @@ inputs:
     description: 'If set to "true", skip the body check'
     required: false
     default: ''
+  validate-pull-request-commits:
+    description: 'If set to "true", validate commits in pull requests instead of the pull request body'
+    required: false
+    default: ''
+  github-token:
+    description: 'GitHub token'
+    required: false
+    default: ''

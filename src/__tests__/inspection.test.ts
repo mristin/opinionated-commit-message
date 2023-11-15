@@ -219,6 +219,7 @@ it(
       maxSubjectLength: 50,
       maxBodyLineLength: 72,
       enforceSignOff: false,
+      validatePullRequestCommits: false,
       skipBodyCheck: false,
     });
 

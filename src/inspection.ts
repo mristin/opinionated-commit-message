@@ -26,13 +26,13 @@ function splitSubjectBody(lines: string[]): MaybeSubjectBody {
   if (lines.length === 0 || lines.length === 1) {
     result.errors.push(
       'Expected at least three lines (subject, empty, body), ' +
-        `but got: ${lines.length}`
+        `but got: ${lines.length}`,
     );
     return result;
   } else if (lines.length === 2) {
     result.errors.push(
       'Expected at least three lines (subject, empty, body) ' +
-        `in a multi-line message, but got: ${lines.length}`
+        `in a multi-line message, but got: ${lines.length}`,
     );
     return result;
   }
@@ -40,7 +40,7 @@ function splitSubjectBody(lines: string[]): MaybeSubjectBody {
   if (lines[1].length !== 0) {
     result.errors.push(
       `Expected an empty line between the subject and the body, ` +
-        `but got a second line of length: ${lines[1].length}`
+        `but got a second line of length: ${lines[1].length}`,
     );
   }
 
@@ -82,7 +82,7 @@ function capitalize(word: string): string {
 
 function errorMessageOnNonVerb(
   firstWord: string,
-  inputs: input.Inputs
+  inputs: input.Inputs,
 ): string {
   const parts = [
     'The subject must start with a verb in imperative mood, ' +
@@ -90,21 +90,21 @@ function errorMessageOnNonVerb(
       'Whether the word is in imperative mood is determined by ' +
       'whitelisting. The general whitelist is available at ' +
       'https://github.com/mristin/opinionated-commit-message/' +
-      'blob/master/src/mostFrequentEnglishVerbs.ts.'
+      'blob/master/src/mostFrequentEnglishVerbs.ts.',
   ];
 
   if (!inputs.hasAdditionalVerbsInput) {
     parts.push(
       'You can whitelist additional verbs using ' +
         '"additional-verbs" input to your GitHub action ' +
-        '(currently no additional verbs were thus specified).'
+        '(currently no additional verbs were thus specified).',
     );
   } else {
     parts.push(
       'You can whitelist additional verbs using ' +
         '"additional-verbs" input to your GitHub action ' +
         `(currently one or more additional verbs were thus ` +
-        'specified).'
+        'specified).',
     );
   }
 
@@ -112,19 +112,19 @@ function errorMessageOnNonVerb(
     parts.push(
       'Moreover, you can also whitelist additional verbs in a file ' +
         'given as "path-to-additional-verbs" input to your GitHub action ' +
-        '(currently no whitelist file was specified).'
+        '(currently no whitelist file was specified).',
     );
   } else {
     parts.push(
       'Moreover, you can also whitelist additional verbs in a file ' +
         'given as "path-to-additional-verbs" input to your GitHub action ' +
-        `(currently the file is: ${inputs.pathToAdditionalVerbs}).`
+        `(currently the file is: ${inputs.pathToAdditionalVerbs}).`,
     );
   }
 
   parts.push(
     'Please check the whitelist and either change the first word ' +
-      'of the subject or whitelist the verb.'
+      'of the subject or whitelist the verb.',
   );
 
   return parts.join(' ');
@@ -139,7 +139,7 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
 
     if (verb !== verb.toLowerCase()) {
       throw new Error(
-        `All additional verbs expected in lower case, but got: ${verb}`
+        `All additional verbs expected in lower case, but got: ${verb}`,
       );
     }
   }
@@ -155,7 +155,7 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
     errors.push(
       `The subject exceeds the limit of ${inputs.maxSubjectLength} characters ` +
         `(got: ${subject.length}, JSON: ${JSON.stringify(subjectWoCode)}).` +
-        'Please shorten the subject to make it more succinct.'
+        'Please shorten the subject to make it more succinct.',
     );
   }
 
@@ -166,7 +166,7 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
         'consisting of letters and possibly dashes in-between, ' +
         `but the subject was: ${JSON.stringify(subjectWoCode)}. ` +
         'Please re-write the subject so that it starts with ' +
-        'a verb in imperative mood.'
+        'a verb in imperative mood.',
     );
   } else {
     const capitalized = capitalize(firstWord);
@@ -174,7 +174,7 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
       errors.push(
         'The subject must start with a capitalized word, ' +
           `but the current first word is: ${JSON.stringify(firstWord)}. ` +
-          `Please capitalize to: ${JSON.stringify(capitalized)}.`
+          `Please capitalize to: ${JSON.stringify(capitalized)}.`,
       );
     }
 
@@ -199,7 +199,7 @@ function checkSubject(subject: string, inputs: input.Inputs): string[] {
   if (subjectWoCode.endsWith('.')) {
     errors.push(
       "The subject must not end with a dot ('.'). " +
-        'Please remove the trailing dot(s).'
+        'Please remove the trailing dot(s).',
     );
   }
 
@@ -212,13 +212,13 @@ const linkDefinitionRe = new RegExp('^\\[[^\\]]+]\\s*:\\s*[^ ]+://[^ ]+$');
 function checkBody(
   subject: string,
   bodyLines: string[],
-  inputs: input.Inputs
+  inputs: input.Inputs,
 ): string[] {
   const errors: string[] = [];
 
   if (bodyLines.length === 0) {
     errors.push(
-      'At least one line is expected in the body, but got empty body.'
+      'At least one line is expected in the body, but got empty body.',
     );
     return errors;
   }
@@ -240,7 +240,7 @@ function checkBody(
           `The line contains ${line.length} characters: ` +
           `${JSON.stringify(line)}. ` +
           'Please reformat the body so that all the lines fit ' +
-          `${inputs.maxBodyLineLength} characters.`
+          `${inputs.maxBodyLineLength} characters.`,
       );
     }
   }
@@ -260,7 +260,7 @@ function checkBody(
             'information instead of repeating the subject. ' +
             'For example, start by explaining the problem that this change ' +
             'is intended to solve or what was previously missing ' +
-            '(e.g., "Previously, ....").'
+            '(e.g., "Previously, ....").',
         );
       }
     }
@@ -270,7 +270,7 @@ function checkBody(
 }
 
 const signedOffByRe = new RegExp(
-  '^\\s*Signed-off-by:\\s*[^<]+\\s*<[^@>, ]+@[^@>, ]+>\\s*$'
+  '^\\s*Signed-off-by:\\s*[^<]+\\s*<[^@>, ]+@[^@>, ]+>\\s*$',
 );
 
 function checkSignedOff(bodyLines: string[]): string[] {
@@ -286,7 +286,7 @@ function checkSignedOff(bodyLines: string[]): string[] {
   if (matches === 0) {
     errors.push(
       "The body does not contain any 'Signed-off-by: ' line. " +
-        'Did you sign off the commit with `git commit --signoff`?'
+        'Did you sign off the commit with `git commit --signoff`?',
     );
   }
 
@@ -295,7 +295,7 @@ function checkSignedOff(bodyLines: string[]): string[] {
 
 const mergeMessageRe = new RegExp(
   "^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
-    'into [^\\000-\\037\\177 ~^:?*[]+$'
+    'into [^\\000-\\037\\177 ~^:?*[]+$',
 );
 
 export function check(message: string, inputs: input.Inputs): string[] {
@@ -326,7 +326,7 @@ export function check(message: string, inputs: input.Inputs): string[] {
 
       if (!inputs.skipBodyCheck) {
         errors.push(
-          ...checkBody(subjectBody.subject, subjectBody.bodyLines, inputs)
+          ...checkBody(subjectBody.subject, subjectBody.bodyLines, inputs),
         );
       }
 

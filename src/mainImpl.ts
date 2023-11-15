@@ -1,43 +1,47 @@
 import * as core from '@actions/core';
-
 import * as commitMessages from './commitMessages';
 import * as inspection from './inspection';
 import * as represent from './represent';
 import * as input from './input';
 
-function runWithExceptions(): void {
-  const messages: string[] = commitMessages.retrieve();
-
+async function runWithExceptions(): Promise<void> {
   ////
   // Parse inputs
   ////
 
   const additionalVerbsInput = core.getInput('additional-verbs', {
-    required: false
+    required: false,
   });
 
   const pathToAdditionalVerbsInput = core.getInput('path-to-additional-verbs', {
-    required: false
+    required: false,
   });
 
   const allowOneLinersInput = core.getInput('allow-one-liners', {
-    required: false
+    required: false,
   });
 
   const maxSubjectLengthInput = core.getInput('max-subject-line-length', {
-    required: false
+    required: false,
   });
 
   const maxBodyLineLengthInput = core.getInput('max-body-line-length', {
-    required: false
+    required: false,
   });
 
   const enforceSignOffInput = core.getInput('enforce-sign-off', {
-    required: false
+    required: false,
   });
 
+  const validatePullRequestCommitsInput = core.getInput(
+    'validate-pull-request-commits',
+    {
+      required: false,
+    },
+  );
+
   const skipBodyCheckInput = core.getInput('skip-body-check', {
-    required: false
+    required: false,
   });
 
   const maybeInputs = input.parseInputs({
@@ -47,7 +51,8 @@ function runWithExceptions(): void {
     maxSubjectLengthInput,
     maxBodyLineLengthInput,
     enforceSignOffInput,
-    skipBodyCheckInput
+    validatePullRequestCommitsInput,
+    skipBodyCheckInput,
   });
 
   if (maybeInputs.error !== null) {
@@ -57,6 +62,11 @@ function runWithExceptions(): void {
   }
 
   const inputs = maybeInputs.mustInputs();
+
+  const messages: string[] = await commitMessages.retrieve(
+    inputs,
+    core.getInput('github-token', {required: false}),
+  );
 
   ////
   // Inspect
@@ -72,7 +82,7 @@ function runWithExceptions(): void {
       const repr: string = represent.formatErrors(
         message,
         messageIndex,
-        errors
+        errors,
       );
 
       parts.push(repr);
@@ -90,10 +100,8 @@ function runWithExceptions(): void {
 /**
  * Main function
  */
-export function run(): void {
-  try {
-    runWithExceptions();
-  } catch (error) {
+export async function run(): Promise<void> {
+  return runWithExceptions().catch(error => {
     if (error instanceof Error) {
       core.error(error);
       core.setFailed(error.message);
@@ -102,5 +110,5 @@ export function run(): void {
       core.error(message);
       core.setFailed(message);
     }
-  }
+  });
 }

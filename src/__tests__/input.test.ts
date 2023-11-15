@@ -37,6 +37,7 @@ it('parses the inputs.', () => {
     maxSubjectLengthInput: '90',
     maxBodyLineLengthInput: '100',
     enforceSignOffInput: 'true',
+    validatePullRequestCommitsInput: 'true',
     skipBodyCheckInput: 'true',
   });
 
@@ -52,5 +53,6 @@ it('parses the inputs.', () => {
   expect(inputs.maxSubjectLength).toEqual(90);
   expect(inputs.maxBodyLineLength).toEqual(100);
   expect(inputs.enforceSignOff).toBeTruthy();
+  expect(inputs.validatePullRequestCommits).toBeTruthy();
   expect(inputs.skipBodyCheck).toBeTruthy();
 });

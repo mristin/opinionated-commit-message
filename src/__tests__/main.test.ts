@@ -26,10 +26,10 @@ it('ensures that the core mocks are reset between the tests.', () => {
   expect(someInput).toEqual('');
 });
 
-it('considers additional verbs.', () => {
+it('considers additional verbs.', async () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => ['Table SomeClass\n\nThis is a dummy commit.']);
+    .mockResolvedValue(['Table SomeClass\n\nThis is a dummy commit.']);
 
   jest.spyOn(core, 'setFailed');
 
@@ -39,7 +39,7 @@ it('considers additional verbs.', () => {
       name === 'additional-verbs' ? 'rewrap,table' : ''
     );
 
-  mainImpl.run();
+  await mainImpl.run();
 
   expect(core.setFailed).not.toHaveBeenCalled();
 });
@@ -47,7 +47,7 @@ it('considers additional verbs.', () => {
 it('considers additional verbs from path.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => ['Table SomeClass\n\nThis is a dummy commit.']);
+    .mockResolvedValue(['Table SomeClass\n\nThis is a dummy commit.']);
 
   jest.spyOn(core, 'setFailed');
 
@@ -72,10 +72,10 @@ it('considers additional verbs from path.', () => {
   expect(core.setFailed).not.toHaveBeenCalled();
 });
 
-it('considers allow-one-liners.', () => {
+it('considers allow-one-liners.', async () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => ['Do something']);
+    .mockResolvedValue(['Do something']);
 
   jest.spyOn(core, 'setFailed');
 
@@ -83,15 +83,15 @@ it('considers allow-one-liners.', () => {
     .spyOn(core, 'getInput')
     .mockImplementation(name => (name === 'allow-one-liners' ? 'true' : ''));
 
-  mainImpl.run();
+  await mainImpl.run();
 
   expect(core.setFailed).not.toHaveBeenCalled();
 });
 
-it('considers skip-body-check.', () => {
+it('considers skip-body-check.', async () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       'Change SomeClass to OtherClass\n' +
         '\n' +
         'Change SomeClass to OtherClass.' +
@@ -105,15 +105,15 @@ it('considers skip-body-check.', () => {
     .spyOn(core, 'getInput')
     .mockImplementation(name => (name === 'skip-body-check' ? 'true' : ''));
 
-  mainImpl.run();
+  await mainImpl.run();
 
   expect(core.setFailed).not.toHaveBeenCalled();
 });
 
-it('formats properly no error message.', () => {
+it('formats properly no error message.', async () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       'Change SomeClass to OtherClass\n' +
         '\n' +
         'This replaces the SomeClass with OtherClass in all of the module \n' +
@@ -122,21 +122,21 @@ it('formats properly no error message.', () => {
 
   jest.spyOn(core, 'setFailed');
 
-  mainImpl.run();
+  await mainImpl.run();
 
   expect(core.setFailed).not.toHaveBeenCalled();
 });
 
-it('formats properly errors on a single message.', () => {
+it('formats properly errors on a single message.', async () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       'change SomeClass to OtherClass\n\nSomeClass with OtherClass'
     ]);
 
   jest.spyOn(core, 'setFailed');
 
-  mainImpl.run();
+  await mainImpl.run();
 
   expect(core.setFailed).toHaveBeenCalledTimes(1);
 
@@ -152,17 +152,17 @@ it('formats properly errors on a single message.', () => {
   );
 });
 
-it('formats properly errors on two messages.', () => {
+it('formats properly errors on two messages.', async () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       `change SomeClass to OtherClass\n\nDo something`,
       'Change other subject\n\nChange body'
     ]);
 
   jest.spyOn(core, 'setFailed');
 
-  mainImpl.run();
+  await mainImpl.run();
 
   expect(core.setFailed).toBeCalledTimes(1);
   expect(core.setFailed).toHaveBeenCalledWith(

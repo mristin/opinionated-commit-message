@@ -8,6 +8,7 @@ interface InputValues {
   maxSubjectLength: number;
   maxBodyLineLength: number;
   enforceSignOff: boolean;
+  validatePullRequestCommits: boolean;
   skipBodyCheck: boolean;
 }
 
@@ -18,6 +19,7 @@ export class Inputs implements InputValues {
   public maxSubjectLength: number;
   public maxBodyLineLength: number;
   public skipBodyCheck: boolean;
+  public validatePullRequestCommits: boolean;
 
   // This is a complete appendix to the whitelist parsed both from
   // the GitHub action input "additional-verbs" and from the file
@@ -34,6 +36,7 @@ export class Inputs implements InputValues {
     this.maxSubjectLength = values.maxSubjectLength;
     this.maxBodyLineLength = values.maxBodyLineLength;
     this.enforceSignOff = values.enforceSignOff;
+    this.validatePullRequestCommits = values.validatePullRequestCommits;
     this.skipBodyCheck = values.skipBodyCheck;
   }
 }
@@ -49,7 +52,7 @@ export class MaybeInputs {
 
     if (inputs !== null && error !== null) {
       throw Error(
-        "Unexpected both 'inputs' and 'error' arguments to be given."
+        "Unexpected both 'inputs' and 'error' arguments to be given.",
       );
     }
 
@@ -61,7 +64,7 @@ export class MaybeInputs {
     if (this.inputs === null) {
       throw Error(
         "The field 'inputs' is expected to be set, but it is null. " +
-          `The field 'error' is: ${this.error}`
+          `The field 'error' is: ${this.error}`,
       );
     }
     return this.inputs;
@@ -75,6 +78,7 @@ interface RawInputs {
   maxSubjectLengthInput?: string;
   maxBodyLineLengthInput?: string;
   enforceSignOffInput?: string;
+  validatePullRequestCommitsInput?: string;
   skipBodyCheckInput?: string;
 }
 
@@ -86,7 +90,8 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     maxSubjectLengthInput = '',
     maxBodyLineLengthInput = '',
     enforceSignOffInput = '',
-    skipBodyCheckInput = ''
+    validatePullRequestCommitsInput = '',
+    skipBodyCheckInput = '',
   } = rawInputs;
 
   const additionalVerbs = new Set<string>();
@@ -104,7 +109,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
       return new MaybeInputs(
         null,
         'The file referenced by path-to-additional-verbs could ' +
-          `not be found: ${pathToAdditionalVerbsInput}`
+          `not be found: ${pathToAdditionalVerbsInput}`,
       );
     }
 
@@ -123,7 +128,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     return new MaybeInputs(
       null,
       'Unexpected value for allow-one-liners. ' +
-        `Expected either 'true' or 'false', got: ${allowOneLinersInput}`
+        `Expected either 'true' or 'false', got: ${allowOneLinersInput}`,
     );
   }
 
@@ -135,7 +140,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     return new MaybeInputs(
       null,
       'Unexpected value for max-subject-line-length. ' +
-        `Expected a number or nothing, got ${maxSubjectLengthInput}`
+        `Expected a number or nothing, got ${maxSubjectLengthInput}`,
     );
   }
 
@@ -147,7 +152,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     return new MaybeInputs(
       null,
       'Unexpected value for max-body-line-length. ' +
-        `Expected a number or nothing, got ${maxBodyLineLengthInput}`
+        `Expected a number or nothing, got ${maxBodyLineLengthInput}`,
     );
   }
 
@@ -159,7 +164,20 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     return new MaybeInputs(
       null,
       'Unexpected value for enforce-sign-off. ' +
-        `Expected either 'true' or 'false', got: ${enforceSignOffInput}`
+        `Expected either 'true' or 'false', got: ${enforceSignOffInput}`,
+    );
+  }
+
+  const validatePullRequestCommits: boolean | null =
+    !validatePullRequestCommitsInput
+      ? false
+      : parseBooleanFromString(validatePullRequestCommitsInput);
+
+  if (validatePullRequestCommits === null) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for validate-pull-request-commits. ' +
+        `Expected either 'true' or 'false', got: ${validatePullRequestCommitsInput}`,
     );
   }
 
@@ -171,7 +189,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     return new MaybeInputs(
       null,
       'Unexpected value for skip-body-check. ' +
-        `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`
+        `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`,
     );
   }
 
@@ -184,9 +202,10 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
       maxSubjectLength,
       maxBodyLineLength,
       enforceSignOff,
-      skipBodyCheck
+      validatePullRequestCommits,
+      skipBodyCheck,
     }),
-    null
+    null,
   );
 }
 
