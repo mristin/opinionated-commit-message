@@ -714,6 +714,7 @@ export const SET = new Set([
   'override',
   'pack',
   'package',
+  'parse',
   'patch',
   'pin',
   'privatize',
