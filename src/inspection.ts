@@ -293,16 +293,30 @@ function checkSignedOff(bodyLines: string[]): string[] {
   return errors;
 }
 
-const mergeMessageRe = new RegExp(
-  "^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
-    'into [^\\000-\\037\\177 ~^:?*[]+$',
-);
+const mergeMessagePatterns: RegExp[] = [
+  // Local merges to default branch
+  /^Merge branch (?:'\S+'|"\S+"|\S+)/,
+  // Local merges to alternate branch
+  /^Merge (:?remote-tracking )?branch (?:'\S+'|"\S+"|\S+) into \S+/,
+  // GitHub Web UI merge pull request
+  /^Merge pull request #\d+ from \S+/,
+];
 
 export function check(message: string, inputs: input.Inputs): string[] {
   const errors: string[] = [];
 
-  if (mergeMessageRe.test(message)) {
-    return errors;
+  if (inputs.ignoreMergeCommits) {
+    for (const pattern of mergeMessagePatterns) {
+      if (pattern.test(message)) {
+        return errors;
+      }
+    }
+  }
+
+  for (const ignorePattern of inputs.ignorePatterns) {
+    if (ignorePattern.test(message)) {
+      return errors;
+    }
   }
 
   const lines = splitLines(message);

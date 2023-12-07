@@ -39,6 +39,11 @@ it('parses the inputs.', () => {
     enforceSignOffInput: 'true',
     validatePullRequestCommitsInput: 'true',
     skipBodyCheckInput: 'true',
+    ignoreMergeCommitsInput: 'false',
+    ignorePatternsInput: `
+    ^Some pattern$
+    Another pattern
+    `
   });
 
   expect(maybeInputs.error).toBeNull();
@@ -55,4 +60,9 @@ it('parses the inputs.', () => {
   expect(inputs.enforceSignOff).toBeTruthy();
   expect(inputs.validatePullRequestCommits).toBeTruthy();
   expect(inputs.skipBodyCheck).toBeTruthy();
+  expect(inputs.ignoreMergeCommits).toBeFalsy();
+  expect(inputs.ignorePatterns).toEqual([
+    /^Some pattern$/,
+    /Another pattern/
+  ]);
 });

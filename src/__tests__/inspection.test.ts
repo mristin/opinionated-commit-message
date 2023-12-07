@@ -1,3 +1,4 @@
+import {Inputs} from '../input';
 import * as input from '../input';
 import * as inspection from '../inspection';
 
@@ -221,6 +222,8 @@ it(
       enforceSignOff: false,
       validatePullRequestCommits: false,
       skipBodyCheck: false,
+      ignoreMergeCommits: false,
+      ignorePatterns: [],
     });
 
     const message =
@@ -427,10 +430,41 @@ it('reports duplicate starting word in subject and body.', () => {
   ]);
 });
 
-it('ignores merge messages.', () => {
-  const message = "Merge branch 'V20DataModel' into miho/Conform-to-spec";
+it.each([
+  // Local merge to default branch
+  "Merge branch 'fantastic-feature'",
+  // Local merge to alternate branch
+  "Merge branch 'V20DataModel' into miho/Conform-to-spec",
+  // Local merge from remote
+  "Merge remote-tracking branch 'origin/remote-branch' into local-branch",
+  // Web UI merge pull request
+  "Merge pull request #11 from acme-corp/the-project"
+])('ignores merge messages.', (message) => {
+  const inputs = new Inputs({
+    ...defaultInputs,
+    ignoreMergeCommits: true,
+    // Ensure all messages would fail if not for ignoring merge commits.
+    maxSubjectLength: 1,
+  })
 
-  const errors = inspection.check(message, defaultInputs);
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([]);
+});
+
+it('ignores messages with given pattern.', () => {
+  const inputs = new Inputs({
+    ...defaultInputs,
+    ignorePatterns: [/\[ALWAYS VALID]/],
+    // Ensure all messages would fail if not for the ignore pattern.
+    maxSubjectLength: 1,
+  })
+
+const message = 'Change SomeClass to OtherClass\n'
+  + '\n'
+  + 'This replaces the SomeClass with OtherClass in all of the module.\n'
+  + '[ALWAYS VALID] '
+
+  const errors = inspection.check(message, inputs);
   expect(errors).toEqual([]);
 });
 
