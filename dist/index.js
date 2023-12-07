@@ -32686,6 +32686,8 @@ class Inputs {
         this.enforceSignOff = values.enforceSignOff;
         this.validatePullRequestCommits = values.validatePullRequestCommits;
         this.skipBodyCheck = values.skipBodyCheck;
+        this.ignoreMergeCommits = values.ignoreMergeCommits;
+        this.ignorePatterns = values.ignorePatterns;
     }
 }
 exports.Inputs = Inputs;
@@ -32710,7 +32712,7 @@ class MaybeInputs {
 }
 exports.MaybeInputs = MaybeInputs;
 function parseInputs(rawInputs) {
-    const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', validatePullRequestCommitsInput = '', skipBodyCheckInput = '', } = rawInputs;
+    const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', validatePullRequestCommitsInput = '', skipBodyCheckInput = '', ignoreMergeCommitsInput = '', ignorePatternsInput = '', } = rawInputs;
     const additionalVerbs = new Set();
     const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
     if (additionalVerbsInput) {
@@ -32770,6 +32772,20 @@ function parseInputs(rawInputs) {
         return new MaybeInputs(null, 'Unexpected value for skip-body-check. ' +
             `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`);
     }
+    const ignoreMergeCommits = !ignoreMergeCommitsInput
+        ? true
+        : parseBooleanFromString(ignoreMergeCommitsInput);
+    if (ignoreMergeCommits === null) {
+        return new MaybeInputs(null, 'Unexpected value for ignore-merge-commits. ' +
+            `Expected either 'true' or 'false', got: ${ignoreMergeCommitsInput}`);
+    }
+    const ignorePatterns = ignorePatternsInput == null
+        ? []
+        : ignorePatternsInput
+            .split('\n')
+            .map(s => s.trim())
+            .filter(s => s.length > 0)
+            .map(s => new RegExp(s));
     return new MaybeInputs(new Inputs({
         hasAdditionalVerbsInput,
         pathToAdditionalVerbs: pathToAdditionalVerbsInput,
@@ -32780,6 +32796,8 @@ function parseInputs(rawInputs) {
         enforceSignOff,
         validatePullRequestCommits,
         skipBodyCheck,
+        ignoreMergeCommits,
+        ignorePatterns,
     }), null);
 }
 exports.parseInputs = parseInputs;
@@ -33042,12 +33060,27 @@ function checkSignedOff(bodyLines) {
     }
     return errors;
 }
-const mergeMessageRe = new RegExp("^Merge branch '[^\\000-\\037\\177 ~^:?*[]+' " +
-    'into [^\\000-\\037\\177 ~^:?*[]+$');
+const mergeMessagePatterns = [
+    // Local merges to default branch
+    /^Merge branch (?:'\S+'|"\S+"|\S+)/,
+    // Local merges to alternate branch
+    /^Merge (:?remote-tracking )?branch (?:'\S+'|"\S+"|\S+) into \S+/,
+    // GitHub Web UI merge pull request
+    /^Merge pull request #\d+ from \S+/,
+];
 function check(message, inputs) {
     const errors = [];
-    if (mergeMessageRe.test(message)) {
-        return errors;
+    if (inputs.ignoreMergeCommits) {
+        for (const pattern of mergeMessagePatterns) {
+            if (pattern.test(message)) {
+                return errors;
+            }
+        }
+    }
+    for (const ignorePattern of inputs.ignorePatterns) {
+        if (ignorePattern.test(message)) {
+            return errors;
+        }
     }
     const lines = splitLines(message);
     if (lines.length === 0) {
@@ -33197,6 +33230,12 @@ function runWithExceptions() {
         const skipBodyCheckInput = core.getInput('skip-body-check', {
             required: false,
         });
+        const ignoreMergeCommitsInput = core.getInput('ignore-merge-commits', {
+            required: false,
+        });
+        const ignorePatternsInput = core.getInput('ignore-patterns', {
+            required: false,
+        });
         const maybeInputs = input.parseInputs({
             additionalVerbsInput,
             pathToAdditionalVerbsInput,
@@ -33206,6 +33245,8 @@ function runWithExceptions() {
             enforceSignOffInput,
             validatePullRequestCommitsInput,
             skipBodyCheckInput,
+            ignoreMergeCommitsInput,
+            ignorePatternsInput,
         });
         if (maybeInputs.error !== null) {
             core.error(maybeInputs.error);
@@ -33980,6 +34021,7 @@ exports.SET = new Set([
     'override',
     'pack',
     'package',
+    'parse',
     'patch',
     'pin',
     'privatize',
