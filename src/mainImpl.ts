@@ -44,6 +44,14 @@ async function runWithExceptions(): Promise<void> {
     required: false,
   });
 
+  const ignoreMergeCommitsInput = core.getInput('ignore-merge-commits', {
+    required: false,
+  });
+
+  const ignorePatternsInput = core.getInput('ignore-patterns', {
+    required: false,
+  });
+
   const maybeInputs = input.parseInputs({
     additionalVerbsInput,
     pathToAdditionalVerbsInput,
@@ -53,6 +61,8 @@ async function runWithExceptions(): Promise<void> {
     enforceSignOffInput,
     validatePullRequestCommitsInput,
     skipBodyCheckInput,
+    ignoreMergeCommitsInput,
+    ignorePatternsInput,
   });
 
   if (maybeInputs.error !== null) {

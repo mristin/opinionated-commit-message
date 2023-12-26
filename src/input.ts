@@ -10,6 +10,8 @@ interface InputValues {
   enforceSignOff: boolean;
   validatePullRequestCommits: boolean;
   skipBodyCheck: boolean;
+  ignoreMergeCommits: boolean;
+  ignorePatterns: RegExp[];
 }
 
 export class Inputs implements InputValues {
@@ -20,6 +22,8 @@ export class Inputs implements InputValues {
   public maxBodyLineLength: number;
   public skipBodyCheck: boolean;
   public validatePullRequestCommits: boolean;
+  public ignoreMergeCommits: boolean;
+  public ignorePatterns: RegExp[];
 
   // This is a complete appendix to the whitelist parsed both from
   // the GitHub action input "additional-verbs" and from the file
@@ -38,6 +42,8 @@ export class Inputs implements InputValues {
     this.enforceSignOff = values.enforceSignOff;
     this.validatePullRequestCommits = values.validatePullRequestCommits;
     this.skipBodyCheck = values.skipBodyCheck;
+    this.ignoreMergeCommits = values.ignoreMergeCommits;
+    this.ignorePatterns = values.ignorePatterns;
   }
 }
 
@@ -80,6 +86,8 @@ interface RawInputs {
   enforceSignOffInput?: string;
   validatePullRequestCommitsInput?: string;
   skipBodyCheckInput?: string;
+  ignoreMergeCommitsInput?: string;
+  ignorePatternsInput?: string;
 }
 
 export function parseInputs(rawInputs: RawInputs): MaybeInputs {
@@ -92,6 +100,8 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     enforceSignOffInput = '',
     validatePullRequestCommitsInput = '',
     skipBodyCheckInput = '',
+    ignoreMergeCommitsInput = '',
+    ignorePatternsInput = '',
   } = rawInputs;
 
   const additionalVerbs = new Set<string>();
@@ -193,6 +203,27 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     );
   }
 
+  const ignoreMergeCommits: boolean | null = !ignoreMergeCommitsInput
+    ? true
+    : parseBooleanFromString(ignoreMergeCommitsInput);
+
+  if (ignoreMergeCommits === null) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for ignore-merge-commits. ' +
+        `Expected either 'true' or 'false', got: ${ignoreMergeCommitsInput}`,
+    );
+  }
+
+  const ignorePatterns: RegExp[] =
+    ignorePatternsInput == null
+      ? []
+      : ignorePatternsInput
+          .split('\n')
+          .map(s => s.trim())
+          .filter(s => s.length > 0)
+          .map(s => new RegExp(s));
+
   return new MaybeInputs(
     new Inputs({
       hasAdditionalVerbsInput,
@@ -204,6 +235,8 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
       enforceSignOff,
       validatePullRequestCommits,
       skipBodyCheck,
+      ignoreMergeCommits,
+      ignorePatterns,
     }),
     null,
   );

@@ -40,6 +40,16 @@ inputs:
     description: 'If set to "true", validate commits in pull requests instead of the pull request body'
     required: false
     default: ''
+  ignore-merge-commits:
+    description: 'If set to "false", merge commits will not be ignored.'
+    required: false
+    default: 'true'
+  ignore-patterns:
+    description: >-
+      Pattern to ignore in commit messages. One pattern per line.
+      Patterns are matched against the whole commit message as regular expressions without any flags.
+    required: false
+    default: ''
   github-token:
     description: 'GitHub token'
     required: false
