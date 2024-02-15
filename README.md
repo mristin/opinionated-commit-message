@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.1
+        uses: mristin/opinionated-commit-message@v3.1.0
 ```
 
 ## Checked Events
@@ -99,7 +99,7 @@ string in the workflow file. For example:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.1
+        uses: mristin/opinionated-commit-message@v3.1.0
         with:
           additional-verbs: 'chrusimusi, unit-test'
 ```
@@ -111,7 +111,7 @@ as input:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.1
+        uses: mristin/opinionated-commit-message@v3.1.0
         with:
           path-to-additional-verbs: 'src/additional-verbs.txt'
 ```
@@ -153,7 +153,7 @@ You can allow one-liner commit messages by setting the flag `allow-one-liners`:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.1
+        uses: mristin/opinionated-commit-message@v3.1.0
         with:
           allow-one-liners: 'true'
 ```
@@ -225,7 +225,7 @@ for pull requests you can either:
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.1
+        uses: mristin/opinionated-commit-message@v3.1.0
         with:
           validate-pull-request-commits: 'true'
           # Required for private repos
@@ -246,7 +246,7 @@ jobs:
       # Make sure this you also have this line
       contents: read
     steps:
-      - uses: mristin/opinionated-commit-message@v3.0.1
+      - uses: mristin/opinionated-commit-message@v3.1.0
         with:
           validate-pull-request-commits: 'true'
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -265,7 +265,7 @@ We provide an `enforce-sign-off` flag so that you can enforce the sign-off in th
 ```yaml
     steps:
       - name: Check
-        uses: mristin/opinionated-commit-message@v3.0.1
+        uses: mristin/opinionated-commit-message@v3.1.0
         with:
           enforce-sign-off: 'true'
 ```
