@@ -807,6 +807,7 @@ export const SET = new Set([
   'solve',
   'sort',
   'sound',
+  'source',
   'spawn',
   'speak',
   'specify',
