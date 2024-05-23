@@ -24,6 +24,10 @@ inputs:
     description: 'Maximum length of the commit subject line'
     required: false
     default: ''
+  min-body-length:
+    description: 'Minimum length of the body of the commit message'
+    required: false
+    default: ''
   max-body-line-length:
     description: 'Maximum length of a line in the body of the commit message'
     required: false

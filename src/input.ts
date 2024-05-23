@@ -6,6 +6,7 @@ interface InputValues {
   allowOneLiners: boolean;
   additionalVerbs: Set<string>;
   maxSubjectLength: number;
+  minBodyLength: number;
   maxBodyLineLength: number;
   enforceSignOff: boolean;
   validatePullRequestCommits: boolean;
@@ -19,6 +20,7 @@ export class Inputs implements InputValues {
   public pathToAdditionalVerbs: string;
   public allowOneLiners: boolean;
   public maxSubjectLength: number;
+  public minBodyLength: number;
   public maxBodyLineLength: number;
   public skipBodyCheck: boolean;
   public validatePullRequestCommits: boolean;
@@ -38,6 +40,7 @@ export class Inputs implements InputValues {
     this.allowOneLiners = values.allowOneLiners;
     this.additionalVerbs = values.additionalVerbs;
     this.maxSubjectLength = values.maxSubjectLength;
+    this.minBodyLength = values.minBodyLength;
     this.maxBodyLineLength = values.maxBodyLineLength;
     this.enforceSignOff = values.enforceSignOff;
     this.validatePullRequestCommits = values.validatePullRequestCommits;
@@ -82,6 +85,7 @@ interface RawInputs {
   pathToAdditionalVerbsInput?: string;
   allowOneLinersInput?: string;
   maxSubjectLengthInput?: string;
+  minBodyLengthInput?: string;
   maxBodyLineLengthInput?: string;
   enforceSignOffInput?: string;
   validatePullRequestCommitsInput?: string;
@@ -118,6 +122,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
     pathToAdditionalVerbsInput = '',
     allowOneLinersInput = '',
     maxSubjectLengthInput = '',
+    minBodyLengthInput = '',
     maxBodyLineLengthInput = '',
     enforceSignOffInput = '',
     validatePullRequestCommitsInput = '',
@@ -173,6 +178,18 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
       null,
       'Unexpected value for max-subject-line-length. ' +
         `Expected a number or nothing, got ${maxSubjectLengthInput}`,
+    );
+  }
+
+  const minBodyLength: number = !minBodyLengthInput
+    ? 0
+    : parseInt(minBodyLengthInput, 10);
+
+  if (Number.isNaN(minBodyLength)) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for min-body-length. ' +
+        `Expected a number or nothing, got ${minBodyLengthInput}`,
     );
   }
 
@@ -253,6 +270,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
       allowOneLiners,
       additionalVerbs,
       maxSubjectLength,
+      minBodyLength,
       maxBodyLineLength,
       enforceSignOff,
       validatePullRequestCommits,

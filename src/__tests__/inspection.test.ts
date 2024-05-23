@@ -212,6 +212,7 @@ it(
       allowOneLiners: false,
       additionalVerbs: new Set<string>('table'),
       maxSubjectLength: 50,
+      minBodyLength: 0,
       maxBodyLineLength: 72,
       enforceSignOff: false,
       validatePullRequestCommits: false,
@@ -316,6 +317,47 @@ it('reports too long a subject line with custom max length.', () => {
       `(got: 70, JSON: "Change SomeClass to OtherClass in order to handle upstream deprecation").` +
       'Please shorten the subject to make it more succinct.',
   ]);
+});
+
+it('reports too short a body length.', () => {
+  const message =
+    'Change SomeClass to OtherClass\n' +
+    '\n' +
+    'This replaces the SomeClass with OtherClass in all of the module\n' +
+    'since Some class was deprecated.';
+
+  const inputs = input.parseInputs({minBodyLengthInput: '100'}).mustInputs();
+
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([
+    `The body must contain at least 100 characters. ` +
+    `The body contains 97 characters.`
+  ]);
+});
+
+it('accepts a body length.', () => {
+  const message =
+    'Change SomeClass to OtherClass\n' +
+    '\n' +
+    'This replaces the SomeClass with OtherClass in all of the module\n' +
+    'since Some class was deprecated.';
+
+  const inputs = input.parseInputs({minBodyLengthInput: '97'}).mustInputs();
+
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([]);
+});
+
+it('accepts a no minimum body length.', () => {
+  const message =
+    'Change SomeClass to OtherClass\n' +
+    '\n' +
+    'This changes SomeClass to OtherClass';
+
+  const inputs = input.parseInputs({}).mustInputs();
+
+  const errors = inspection.check(message, inputs);
+  expect(errors).toEqual([]);
 });
 
 it('reports too long a body line.', () => {
