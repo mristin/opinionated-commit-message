@@ -36,7 +36,7 @@ it('considers additional verbs.', async () => {
   jest
     .spyOn(core, 'getInput')
     .mockImplementation(name =>
-      name === 'additional-verbs' ? 'rewrap,table' : ''
+      name === 'additional-verbs' ? 'rewrap,table' : '',
     );
 
   await mainImpl.run();
@@ -56,7 +56,7 @@ it('considers additional verbs from path.', () => {
   jest
     .spyOn(core, 'getInput')
     .mockImplementation(name =>
-      name === 'path-to-additional-verbs' ? pathToVerbs : ''
+      name === 'path-to-additional-verbs' ? pathToVerbs : '',
     );
 
   jest.spyOn(fs, 'existsSync').mockImplementation(path => path === pathToVerbs);
@@ -73,9 +73,7 @@ it('considers additional verbs from path.', () => {
 });
 
 it('considers allow-one-liners.', async () => {
-  jest
-    .spyOn(commitMessages, 'retrieve')
-    .mockResolvedValue(['Do something']);
+  jest.spyOn(commitMessages, 'retrieve').mockResolvedValue(['Do something']);
 
   jest.spyOn(core, 'setFailed');
 
@@ -96,7 +94,7 @@ it('considers skip-body-check.', async () => {
         '\n' +
         'Change SomeClass to OtherClass.' +
         'This replaces the SomeClass with OtherClass in all of the module ' +
-        'since Some class was deprecated.'
+        'since Some class was deprecated.',
     ]);
 
   jest.spyOn(core, 'setFailed');
@@ -117,7 +115,7 @@ it('formats properly no error message.', async () => {
       'Change SomeClass to OtherClass\n' +
         '\n' +
         'This replaces the SomeClass with OtherClass in all of the module \n' +
-        'since Some class was deprecated.'
+        'since Some class was deprecated.',
     ]);
 
   jest.spyOn(core, 'setFailed');
@@ -131,7 +129,7 @@ it('formats properly errors on a single message.', async () => {
   jest
     .spyOn(commitMessages, 'retrieve')
     .mockResolvedValue([
-      'change SomeClass to OtherClass\n\nSomeClass with OtherClass'
+      'change SomeClass to OtherClass\n\nSomeClass with OtherClass',
     ]);
 
   jest.spyOn(core, 'setFailed');
@@ -148,7 +146,7 @@ it('formats properly errors on a single message.', async () => {
       'The original message was:\n' +
       'change SomeClass to OtherClass\n' +
       '\n' +
-      'SomeClass with OtherClass\n'
+      'SomeClass with OtherClass\n',
   );
 });
 
@@ -157,7 +155,7 @@ it('formats properly errors on two messages.', async () => {
     .spyOn(commitMessages, 'retrieve')
     .mockResolvedValue([
       `change SomeClass to OtherClass\n\nDo something`,
-      'Change other subject\n\nChange body'
+      'Change other subject\n\nChange body',
     ]);
 
   jest.spyOn(core, 'setFailed');
@@ -180,6 +178,6 @@ it('formats properly errors on two messages.', async () => {
       'is intended to solve or what was previously missing ' +
       '(e.g., "Previously, ....").\n' +
       'The original message was:\n' +
-      'Change other subject\n\nChange body\n'
+      'Change other subject\n\nChange body\n',
   );
 });

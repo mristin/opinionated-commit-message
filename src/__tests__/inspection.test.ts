@@ -2,9 +2,7 @@ import {Inputs} from '../input';
 import * as input from '../input';
 import * as inspection from '../inspection';
 
-const defaultInputs: input.Inputs = input
-  .parseInputs({})
-  .mustInputs();
+const defaultInputs: input.Inputs = input.parseInputs({}).mustInputs();
 
 it('reports no errors on correct multi-line message.', () => {
   const message =
@@ -29,9 +27,7 @@ it('reports no errors on OK multi-line message with allowed one-liners.', () => 
 });
 
 it('reports no errors on OK single-line message with allowed one-liners.', () => {
-  const inputs = input
-    .parseInputs({allowOneLinersInput: 'true'})
-    .mustInputs();
+  const inputs = input.parseInputs({allowOneLinersInput: 'true'}).mustInputs();
 
   const message = 'Change SomeClass to OtherClass';
 
@@ -54,7 +50,7 @@ it('reports too few lines with disallowed one-liners.', () => {
   const message = 'Change SomeClass to OtherClass';
   const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
-    'Expected at least three lines (subject, empty, body), but got: 1'
+    'Expected at least three lines (subject, empty, body), but got: 1',
   ]);
 });
 
@@ -86,15 +82,13 @@ it('reports missing body with disallowed one-liners.', () => {
 });
 
 it('reports missing body with allowed one-liners.', () => {
-  const inputs = input
-    .parseInputs({allowOneLinersInput: 'true'})
-    .mustInputs();
+  const inputs = input.parseInputs({allowOneLinersInput: 'true'}).mustInputs();
 
   const message = 'Change SomeClass to OtherClass\n';
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([
     'Expected at least three lines (subject, empty, body) ' +
-      'in a multi-line message, but got: 2'
+      'in a multi-line message, but got: 2',
   ]);
 });
 
@@ -108,7 +102,7 @@ it('reports on missing empty line between subject and body.', () => {
   const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     'Expected an empty line between the subject and the body, ' +
-      'but got a second line of length: 3'
+      'but got a second line of length: 3',
   ]);
 });
 
@@ -121,7 +115,7 @@ it('reports the subject starting with a non-word.', () => {
       'consisting of letters and possibly dashes in-between, ' +
       'but the subject was: "ABC12". ' +
       'Please re-write the subject so that it starts ' +
-      'with a verb in imperative mood.'
+      'with a verb in imperative mood.',
   ]);
 });
 
@@ -136,7 +130,7 @@ it('reports the subject starting with a non-capitalized word.', () => {
   expect(errors).toEqual([
     'The subject must start with a capitalized word, ' +
       'but the current first word is: "change". ' +
-      'Please capitalize to: "Change".'
+      'Please capitalize to: "Change".',
   ]);
 });
 
@@ -165,9 +159,9 @@ it(
         'in a file given as "path-to-additional-verbs" input to ' +
         'your GitHub action (currently no whitelist file was specified). ' +
         'Please check the whitelist and either change the first word ' +
-        'of the subject or whitelist the verb.'
+        'of the subject or whitelist the verb.',
     ]);
-  }
+  },
 );
 
 it(
@@ -177,7 +171,7 @@ it(
     const inputs = input
       .parseInputs({
         additionalVerbsInput: 'table',
-        allowOneLinersInput: 'false'
+        allowOneLinersInput: 'false',
       })
       .mustInputs();
 
@@ -203,9 +197,9 @@ it(
         'as "path-to-additional-verbs" input to your GitHub action ' +
         '(currently no whitelist file was specified). Please check the ' +
         'whitelist and either change the first word of the subject or ' +
-        'whitelist the verb.'
+        'whitelist the verb.',
     ]);
-  }
+  },
 );
 
 it(
@@ -248,9 +242,9 @@ it(
         'as "path-to-additional-verbs" input to your GitHub action ' +
         '(currently the file is: /some/path). Please check the ' +
         'whitelist and either change the first word of the subject or ' +
-        'whitelist the verb.'
+        'whitelist the verb.',
     ]);
-  }
+  },
 );
 
 it('accepts the subject starting with an additional verb.', () => {
@@ -276,21 +270,19 @@ it('reports the subject ending in a dot.', () => {
   const errors = inspection.check(message, defaultInputs);
   expect(errors).toEqual([
     "The subject must not end with a dot ('.'). " +
-      'Please remove the trailing dot(s).'
+      'Please remove the trailing dot(s).',
   ]);
 });
 
 it('reports an incorrect one-line message with allowed one-liners.', () => {
-  const inputs = input
-    .parseInputs({allowOneLinersInput: 'true'})
-    .mustInputs();
+  const inputs = input.parseInputs({allowOneLinersInput: 'true'}).mustInputs();
 
   const message = 'Change SomeClass to OtherClass.';
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([
     "The subject must not end with a dot ('.'). " +
-      'Please remove the trailing dot(s).'
+      'Please remove the trailing dot(s).',
   ]);
 });
 
@@ -305,7 +297,7 @@ it('reports too long a subject line.', () => {
   expect(errors).toEqual([
     `The subject exceeds the limit of 50 characters ` +
       `(got: 70, JSON: "Change SomeClass to OtherClass in order to handle upstream deprecation").` +
-      'Please shorten the subject to make it more succinct.'
+      'Please shorten the subject to make it more succinct.',
   ]);
 });
 
@@ -316,15 +308,13 @@ it('reports too long a subject line with custom max length.', () => {
     'This replaces the SomeClass with OtherClass in all of the module\n' +
     'since Some class was deprecated.';
 
-  const inputs = input
-    .parseInputs({maxSubjectLengthInput: '60'})
-    .mustInputs();
+  const inputs = input.parseInputs({maxSubjectLengthInput: '60'}).mustInputs();
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([
     `The subject exceeds the limit of 60 characters ` +
       `(got: 70, JSON: "Change SomeClass to OtherClass in order to handle upstream deprecation").` +
-      'Please shorten the subject to make it more succinct.'
+      'Please shorten the subject to make it more succinct.',
   ]);
 });
 
@@ -341,7 +331,7 @@ it('reports too long a body line.', () => {
       '72 characters. The line contains 97 characters: ' +
       '"This replaces the SomeClass with OtherClass in all of the module since ' +
       'Some class was deprecated.". ' +
-      'Please reformat the body so that all the lines fit 72 characters.'
+      'Please reformat the body so that all the lines fit 72 characters.',
   ]);
 });
 
@@ -352,9 +342,7 @@ it('reports too long a body line with custom max length.', () => {
     'This replaces the SomeClass with OtherClass in all of the module ' +
     'since Some class was deprecated.';
 
-  const inputs = input
-    .parseInputs({maxBodyLineLengthInput: '90'})
-    .mustInputs();
+  const inputs = input.parseInputs({maxBodyLineLengthInput: '90'}).mustInputs();
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([
@@ -362,7 +350,7 @@ it('reports too long a body line with custom max length.', () => {
       '90 characters. The line contains 97 characters: ' +
       '"This replaces the SomeClass with OtherClass in all of the module since ' +
       'Some class was deprecated.". ' +
-      'Please reformat the body so that all the lines fit 90 characters.'
+      'Please reformat the body so that all the lines fit 90 characters.',
   ]);
 });
 
@@ -426,7 +414,7 @@ it('reports duplicate starting word in subject and body.', () => {
       'Please make the body more informative by adding more information ' +
       'instead of repeating the subject. For example, start by explaining ' +
       'the problem that this change is intended to solve or what was ' +
-      'previously missing (e.g., "Previously, ....").'
+      'previously missing (e.g., "Previously, ....").',
   ]);
 });
 
@@ -438,14 +426,14 @@ it.each([
   // Local merge from remote
   "Merge remote-tracking branch 'origin/remote-branch' into local-branch",
   // Web UI merge pull request
-  "Merge pull request #11 from acme-corp/the-project"
-])('ignores merge messages.', (message) => {
+  'Merge pull request #11 from acme-corp/the-project',
+])('ignores merge messages.', message => {
   const inputs = new Inputs({
     ...defaultInputs,
     ignoreMergeCommits: true,
     // Ensure all messages would fail if not for ignoring merge commits.
     maxSubjectLength: 1,
-  })
+  });
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([]);
@@ -457,12 +445,13 @@ it('ignores messages with given pattern.', () => {
     ignorePatterns: [/\[ALWAYS VALID]/],
     // Ensure all messages would fail if not for the ignore pattern.
     maxSubjectLength: 1,
-  })
+  });
 
-const message = 'Change SomeClass to OtherClass\n'
-  + '\n'
-  + 'This replaces the SomeClass with OtherClass in all of the module.\n'
-  + '[ALWAYS VALID] '
+  const message =
+    'Change SomeClass to OtherClass\n' +
+    '\n' +
+    'This replaces the SomeClass with OtherClass in all of the module.\n' +
+    '[ALWAYS VALID] ';
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([]);
@@ -499,7 +488,7 @@ ${url}`;
     'The line 3 of the message (line 1 of the body) exceeds ' +
       'the limit of 72 characters. The line contains 92 characters: ' +
       `"This ${long} patch does something with the URL.". ` +
-      'Please reformat the body so that all the lines fit 72 characters.'
+      'Please reformat the body so that all the lines fit 72 characters.',
   ]);
 });
 
@@ -539,14 +528,12 @@ The ${long} line is too long.`;
     'The line 7 of the message (line 5 of the body) exceeds ' +
       'the limit of 72 characters. The line contains 74 characters: ' +
       `"The ${long} line is too long.". ` +
-      'Please reformat the body so that all the lines fit 72 characters.'
+      'Please reformat the body so that all the lines fit 72 characters.',
   ]);
 });
 
 it('accepts the valid body when enforcing the sign-off.', () => {
-  const inputs = input
-    .parseInputs({enforceSignOffInput: 'true'})
-    .mustInputs();
+  const inputs = input.parseInputs({enforceSignOffInput: 'true'}).mustInputs();
 
   const message = `Do something
 
@@ -565,9 +552,7 @@ Signed-off-by: Somebody Else <some@body-else.com>
 });
 
 it('rejects invalid sign-offs.', () => {
-  const inputs = input
-    .parseInputs({enforceSignOffInput: 'true'})
-    .mustInputs();
+  const inputs = input.parseInputs({enforceSignOffInput: 'true'}).mustInputs();
 
   const message = `Do something
 
@@ -586,6 +571,6 @@ Signed-off-by: Random Developer
 
   const errors = inspection.check(message, inputs);
   expect(errors).toEqual([
-    "The body does not contain any 'Signed-off-by: ' line. Did you sign off the commit with `git commit --signoff`?"
+    "The body does not contain any 'Signed-off-by: ' line. Did you sign off the commit with `git commit --signoff`?",
   ]);
 });

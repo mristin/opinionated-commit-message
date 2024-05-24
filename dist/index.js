@@ -29058,6 +29058,25 @@ class MaybeInputs {
     }
 }
 exports.MaybeInputs = MaybeInputs;
+const infLiteralSet = new Set([
+    'inf',
+    'infty',
+    'infinity',
+    '-inf',
+    '-infty',
+    '-infinity',
+]);
+/**
+ * Parse the `text` as either an integer or `Infinity`.
+ *
+ * If the `text` could not be parsed, return a `NaN`.
+ */
+function parseIntOrInfinity(text) {
+    if (infLiteralSet.has(text.toLowerCase())) {
+        return Infinity;
+    }
+    return parseInt(text, 10);
+}
 function parseInputs(rawInputs) {
     const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', validatePullRequestCommitsInput = '', skipBodyCheckInput = '', ignoreMergeCommitsInput = '', ignorePatternsInput = '', } = rawInputs;
     const additionalVerbs = new Set();
@@ -29086,14 +29105,14 @@ function parseInputs(rawInputs) {
     }
     const maxSubjectLength = !maxSubjectLengthInput
         ? 50
-        : parseInt(maxSubjectLengthInput, 10);
+        : parseIntOrInfinity(maxSubjectLengthInput);
     if (Number.isNaN(maxSubjectLength)) {
         return new MaybeInputs(null, 'Unexpected value for max-subject-line-length. ' +
             `Expected a number or nothing, got ${maxSubjectLengthInput}`);
     }
     const maxBodyLineLength = !maxBodyLineLengthInput
         ? 72
-        : parseInt(maxBodyLineLengthInput, 10);
+        : parseIntOrInfinity(maxBodyLineLengthInput);
     if (Number.isNaN(maxBodyLineLength)) {
         return new MaybeInputs(null, 'Unexpected value for max-body-line-length. ' +
             `Expected a number or nothing, got ${maxBodyLineLengthInput}`);
