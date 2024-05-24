@@ -43,7 +43,7 @@ it('parses the inputs.', () => {
     ignorePatternsInput: `
     ^Some pattern$
     Another pattern
-    `
+    `,
   });
 
   expect(maybeInputs.error).toBeNull();
@@ -52,7 +52,7 @@ it('parses the inputs.', () => {
   expect(inputs.hasAdditionalVerbsInput).toBeTruthy();
   expect(inputs.pathToAdditionalVerbs).toEqual(pathToVerbs);
   expect(inputs.additionalVerbs).toEqual(
-    new Set<string>(['rewrap', 'table', 'integrate', 'analyze'])
+    new Set<string>(['rewrap', 'table', 'integrate', 'analyze']),
   );
   expect(inputs.allowOneLiners).toBeTruthy();
   expect(inputs.maxSubjectLength).toEqual(90);
@@ -61,8 +61,18 @@ it('parses the inputs.', () => {
   expect(inputs.validatePullRequestCommits).toBeTruthy();
   expect(inputs.skipBodyCheck).toBeTruthy();
   expect(inputs.ignoreMergeCommits).toBeFalsy();
-  expect(inputs.ignorePatterns).toEqual([
-    /^Some pattern$/,
-    /Another pattern/
-  ]);
+  expect(inputs.ignorePatterns).toEqual([/^Some pattern$/, /Another pattern/]);
+});
+
+it('parses the Infinity limits.', () => {
+  const maybeInputs = input.parseInputs({
+    maxSubjectLengthInput: 'Infinity',
+    maxBodyLineLengthInput: 'Infinity',
+  });
+
+  expect(maybeInputs.error).toBeNull();
+
+  const inputs = maybeInputs.mustInputs();
+  expect(inputs.maxSubjectLength).toEqual(Infinity);
+  expect(inputs.maxBodyLineLength).toEqual(Infinity);
 });

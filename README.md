@@ -174,6 +174,8 @@ You can change the imposed maximum subject length by setting the flag `max-subje
           max-subject-line-length: '100'
 ```
 
+If you want to disable the limit, set it to `Infinity`.
+
 ## Custom line length on the body
 
 Similar to the subject line, for terminals and monospaced GUIs it is a good practice to limit the line length of the body to 72 characters.
@@ -189,6 +191,8 @@ You can change the imposed maximum line length by setting the flag `max-body-lin
         with:
           max-body-line-length: '100'
 ```
+
+If you want to disable the limit, set it to `Infinity`.
 
 ## Skip Body Check
 

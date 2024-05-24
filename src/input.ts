@@ -90,6 +90,28 @@ interface RawInputs {
   ignorePatternsInput?: string;
 }
 
+const infLiteralSet = new Set<string>([
+  'inf',
+  'infty',
+  'infinity',
+  '-inf',
+  '-infty',
+  '-infinity',
+]);
+
+/**
+ * Parse the `text` as either an integer or `Infinity`.
+ *
+ * If the `text` could not be parsed, return a `NaN`.
+ */
+function parseIntOrInfinity(text: string): number {
+  if (infLiteralSet.has(text.toLowerCase())) {
+    return Infinity;
+  }
+
+  return parseInt(text, 10);
+}
+
 export function parseInputs(rawInputs: RawInputs): MaybeInputs {
   const {
     additionalVerbsInput = '',
@@ -144,7 +166,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
 
   const maxSubjectLength: number = !maxSubjectLengthInput
     ? 50
-    : parseInt(maxSubjectLengthInput, 10);
+    : parseIntOrInfinity(maxSubjectLengthInput);
 
   if (Number.isNaN(maxSubjectLength)) {
     return new MaybeInputs(
@@ -156,7 +178,7 @@ export function parseInputs(rawInputs: RawInputs): MaybeInputs {
 
   const maxBodyLineLength: number = !maxBodyLineLengthInput
     ? 72
-    : parseInt(maxBodyLineLengthInput, 10);
+    : parseIntOrInfinity(maxBodyLineLengthInput);
 
   if (Number.isNaN(maxBodyLineLength)) {
     return new MaybeInputs(
