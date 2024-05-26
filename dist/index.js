@@ -29029,6 +29029,7 @@ class Inputs {
         this.allowOneLiners = values.allowOneLiners;
         this.additionalVerbs = values.additionalVerbs;
         this.maxSubjectLength = values.maxSubjectLength;
+        this.minBodyLength = values.minBodyLength;
         this.maxBodyLineLength = values.maxBodyLineLength;
         this.enforceSignOff = values.enforceSignOff;
         this.validatePullRequestCommits = values.validatePullRequestCommits;
@@ -29078,7 +29079,7 @@ function parseIntOrInfinity(text) {
     return parseInt(text, 10);
 }
 function parseInputs(rawInputs) {
-    const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', validatePullRequestCommitsInput = '', skipBodyCheckInput = '', ignoreMergeCommitsInput = '', ignorePatternsInput = '', } = rawInputs;
+    const { additionalVerbsInput = '', pathToAdditionalVerbsInput = '', allowOneLinersInput = '', maxSubjectLengthInput = '', minBodyLengthInput = '', maxBodyLineLengthInput = '', enforceSignOffInput = '', validatePullRequestCommitsInput = '', skipBodyCheckInput = '', ignoreMergeCommitsInput = '', ignorePatternsInput = '', } = rawInputs;
     const additionalVerbs = new Set();
     const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
     if (additionalVerbsInput) {
@@ -29109,6 +29110,13 @@ function parseInputs(rawInputs) {
     if (Number.isNaN(maxSubjectLength)) {
         return new MaybeInputs(null, 'Unexpected value for max-subject-line-length. ' +
             `Expected a number or nothing, got ${maxSubjectLengthInput}`);
+    }
+    const minBodyLength = !minBodyLengthInput
+        ? 0
+        : parseInt(minBodyLengthInput, 10);
+    if (Number.isNaN(minBodyLength)) {
+        return new MaybeInputs(null, 'Unexpected value for min-body-length. ' +
+            `Expected a number or nothing, got ${minBodyLengthInput}`);
     }
     const maxBodyLineLength = !maxBodyLineLengthInput
         ? 72
@@ -29158,6 +29166,7 @@ function parseInputs(rawInputs) {
         allowOneLiners,
         additionalVerbs,
         maxSubjectLength,
+        minBodyLength,
         maxBodyLineLength,
         enforceSignOff,
         validatePullRequestCommits,
@@ -29380,6 +29389,15 @@ function checkBody(subject, bodyLines, inputs) {
         errors.push('Unexpected empty body');
         return errors;
     }
+    // Minimum character body length
+    if (inputs.minBodyLength) {
+        const bodyLength = bodyLines.join(' ').length;
+        if (bodyLength < inputs.minBodyLength) {
+            errors.push(`The body must contain at least ${inputs.minBodyLength} characters. ` +
+                `The body contains ${bodyLength} characters.`);
+            return errors;
+        }
+    }
     for (const [i, line] of bodyLines.entries()) {
         if (urlLineRe.test(line) || linkDefinitionRe.test(line)) {
             continue;
@@ -29574,6 +29592,9 @@ async function runWithExceptions() {
     const maxSubjectLengthInput = core.getInput('max-subject-line-length', {
         required: false,
     });
+    const minBodyLengthInput = core.getInput('min-body-length', {
+        required: false,
+    });
     const maxBodyLineLengthInput = core.getInput('max-body-line-length', {
         required: false,
     });
@@ -29597,6 +29618,7 @@ async function runWithExceptions() {
         pathToAdditionalVerbsInput,
         allowOneLinersInput,
         maxSubjectLengthInput,
+        minBodyLengthInput,
         maxBodyLineLengthInput,
         enforceSignOffInput,
         validatePullRequestCommitsInput,

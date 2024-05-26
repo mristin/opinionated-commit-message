@@ -35,6 +35,7 @@ it('parses the inputs.', () => {
     pathToAdditionalVerbsInput: pathToVerbs,
     allowOneLinersInput: 'true',
     maxSubjectLengthInput: '90',
+    minBodyLengthInput: '120',
     maxBodyLineLengthInput: '100',
     enforceSignOffInput: 'true',
     validatePullRequestCommitsInput: 'true',
@@ -56,6 +57,7 @@ it('parses the inputs.', () => {
   );
   expect(inputs.allowOneLiners).toBeTruthy();
   expect(inputs.maxSubjectLength).toEqual(90);
+  expect(inputs.minBodyLength).toEqual(120);
   expect(inputs.maxBodyLineLength).toEqual(100);
   expect(inputs.enforceSignOff).toBeTruthy();
   expect(inputs.validatePullRequestCommits).toBeTruthy();

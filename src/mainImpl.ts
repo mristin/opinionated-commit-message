@@ -25,6 +25,10 @@ async function runWithExceptions(): Promise<void> {
     required: false,
   });
 
+  const minBodyLengthInput = core.getInput('min-body-length', {
+    required: false,
+  });
+
   const maxBodyLineLengthInput = core.getInput('max-body-line-length', {
     required: false,
   });
@@ -57,6 +61,7 @@ async function runWithExceptions(): Promise<void> {
     pathToAdditionalVerbsInput,
     allowOneLinersInput,
     maxSubjectLengthInput,
+    minBodyLengthInput,
     maxBodyLineLengthInput,
     enforceSignOffInput,
     validatePullRequestCommitsInput,

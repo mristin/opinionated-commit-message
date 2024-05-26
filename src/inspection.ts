@@ -228,6 +228,19 @@ function checkBody(
     return errors;
   }
 
+  // Minimum character body length
+  if (inputs.minBodyLength) {
+    const bodyLength = bodyLines.join(' ').length;
+
+    if (bodyLength < inputs.minBodyLength) {
+        errors.push(
+          `The body must contain at least ${inputs.minBodyLength} characters. ` +
+          `The body contains ${bodyLength} characters.`,
+        );
+        return errors;
+    }
+  }
+
   for (const [i, line] of bodyLines.entries()) {
     if (urlLineRe.test(line) || linkDefinitionRe.test(line)) {
       continue;
