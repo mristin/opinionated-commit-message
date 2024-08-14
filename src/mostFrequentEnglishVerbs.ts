@@ -511,6 +511,7 @@ export const SET = new Set([
   'map',
   'mark',
   'marry',
+  'mash',
   'match',
   'materialize',
   'matter',
