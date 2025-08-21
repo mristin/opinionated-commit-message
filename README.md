@@ -46,6 +46,7 @@ You can set up a GitHub workflow to automatically check messages.
 Put the following file in `.github/workflows/check-commit-message.yml` and 
 GitHub should pick it and set it up.
 
+
 ```yml
 name: 'Check commit message style'
 on:
